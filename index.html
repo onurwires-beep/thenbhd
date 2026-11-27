@@ -441,7 +441,7 @@
       gap: 13px;
     }
 
-    /* İnteraktif Parmakla Kontrol Edilen Ataköy Marina Haritası (Biletix Planına Uygun) */
+    /* İnteraktif Parmakla Kontrol Edilen Ataköy Marina Haritası */
     .tactile-arena-wrap {
       display: flex;
       flex-direction: column;
@@ -972,6 +972,11 @@
       word-break: break-word;
     }
 
+    .msg-item.admin-msg {
+      background: rgba(239, 68, 68, 0.11);
+      border: 1px solid rgba(239, 68, 68, 0.34);
+    }
+
     .msg-head {
       display: flex;
       justify-content: space-between;
@@ -980,6 +985,27 @@
       color: var(--muted);
       margin-bottom: 2px;
       font-weight: 600;
+    }
+
+    .msg-author-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .msg-item.admin-msg .msg-author-name {
+      color: #fca5a5;
+      font-weight: 750;
+    }
+
+    .admin-shield-icon {
+      width: 13px;
+      height: 14px;
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: middle;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
     }
 
     .msg-meta-right {
@@ -1107,7 +1133,23 @@
     </div>
 
     <div class="nick-badge-row" id="nickBadgeRow">
-      <span>Sohbet adı: <strong id="activeNickLabel"></strong></span>
+      <span style="display:inline-flex;align-items:center;gap:5px;">
+        Sohbet adı:
+        <span id="nickPreviewBadge" style="display:none;align-items:center;">
+          <svg class="admin-shield-icon" viewBox="0 0 100 108" aria-label="Admin">
+            <path d="M50 2 L95 15 L95 49 C95 77 75 95 50 106 C25 95 5 77 5 49 L5 15 Z" fill="#ef0b0b"/>
+            <g transform="rotate(-42 50 54)" fill="#09090b">
+              <rect x="27" y="29" width="46" height="23" rx="3"/>
+              <rect x="20" y="25" width="6" height="31" rx="3"/>
+              <rect x="74" y="25" width="6" height="31" rx="3"/>
+              <rect x="42" y="54" width="16" height="7" rx="3"/>
+              <rect x="44" y="62" width="12" height="13" rx="2"/>
+              <path d="M44 77 H56 V83 A6 6 0 0 1 44 83 Z"/>
+            </g>
+          </svg>
+        </span>
+        <strong id="activeNickLabel"></strong>
+      </span>
       <button type="button" class="ghost-btn" id="editNickBtn" style="padding: 3px 8px; font-size: 10.5px;">Değiştir</button>
     </div>
 
@@ -1414,6 +1456,7 @@
     const nickInput = document.getElementById("nickInput");
     const saveNickBtn = document.getElementById("saveNickBtn");
     const nickBadgeRow = document.getElementById("nickBadgeRow");
+    const nickPreviewBadge = document.getElementById("nickPreviewBadge");
     const activeNickLabel = document.getElementById("activeNickLabel");
     const editNickBtn = document.getElementById("editNickBtn");
     const chatStatusNotice = document.getElementById("chatStatusNotice");
@@ -1456,6 +1499,70 @@
     const channel = ("BroadcastChannel" in window)
       ? new BroadcastChannel("nbhd_marina_2027_v13")
       : null;
+
+    function createAdminShieldSvg() {
+      const ns = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("class", "admin-shield-icon");
+      svg.setAttribute("viewBox", "0 0 100 108");
+      svg.setAttribute("aria-label", "Admin");
+
+      const shield = document.createElementNS(ns, "path");
+      shield.setAttribute("d", "M50 2 L95 15 L95 49 C95 77 75 95 50 106 C25 95 5 77 5 49 L5 15 Z");
+      shield.setAttribute("fill", "#ef0b0b");
+      svg.appendChild(shield);
+
+      const g = document.createElementNS(ns, "g");
+      g.setAttribute("transform", "rotate(-42 50 54)");
+      g.setAttribute("fill", "#09090b");
+
+      const head = document.createElementNS(ns, "rect");
+      head.setAttribute("x", "27");
+      head.setAttribute("y", "29");
+      head.setAttribute("width", "46");
+      head.setAttribute("height", "23");
+      head.setAttribute("rx", "3");
+
+      const capL = document.createElementNS(ns, "rect");
+      capL.setAttribute("x", "20");
+      capL.setAttribute("y", "25");
+      capL.setAttribute("width", "6");
+      capL.setAttribute("height", "31");
+      capL.setAttribute("rx", "3");
+
+      const capR = document.createElementNS(ns, "rect");
+      capR.setAttribute("x", "74");
+      capR.setAttribute("y", "25");
+      capR.setAttribute("width", "6");
+      capR.setAttribute("height", "31");
+      capR.setAttribute("rx", "3");
+
+      const collar = document.createElementNS(ns, "rect");
+      collar.setAttribute("x", "42");
+      collar.setAttribute("y", "54");
+      collar.setAttribute("width", "16");
+      collar.setAttribute("height", "7");
+      collar.setAttribute("rx", "3");
+
+      const shaft = document.createElementNS(ns, "rect");
+      shaft.setAttribute("x", "44");
+      shaft.setAttribute("y", "62");
+      shaft.setAttribute("width", "12");
+      shaft.setAttribute("height", "13");
+      shaft.setAttribute("rx", "2");
+
+      const tip = document.createElementNS(ns, "path");
+      tip.setAttribute("d", "M44 77 H56 V83 A6 6 0 0 1 44 83 Z");
+
+      g.appendChild(head);
+      g.appendChild(capL);
+      g.appendChild(capR);
+      g.appendChild(collar);
+      g.appendChild(shaft);
+      g.appendChild(tip);
+      svg.appendChild(g);
+      return svg;
+    }
 
     // =========================================================
     // 0. KALICI SOHBET GEÇMİŞİ (LOCALSTORAGE)
@@ -2153,7 +2260,9 @@
       if (hasNick) {
         nickGateBox.style.display = "none";
         nickBadgeRow.classList.add("visible");
+        nickPreviewBadge.style.display = isOperator ? "inline-flex" : "none";
         activeNickLabel.textContent = currentNick;
+        activeNickLabel.style.color = isOperator ? "#fca5a5" : "";
 
         if (chatFrozen && !isOperator) {
           chatStatusNotice.classList.add("visible");
@@ -2172,7 +2281,9 @@
           chatStatusNotice.classList.remove("visible");
           chatInput.disabled = false;
           sendChatBtn.disabled = false;
-          chatInput.placeholder = `${currentNick} olarak mesaj yaz...`;
+          chatInput.placeholder = isOperator
+            ? `${currentNick} (Admin) olarak yaz...`
+            : `${currentNick} olarak mesaj yaz...`;
         }
       } else {
         nickGateBox.style.display = "flex";
@@ -2258,18 +2369,28 @@
         id: msgId,
         author: data.author,
         text: data.text,
-        time: data.time || ""
+        time: data.time || "",
+        isAdmin: Boolean(data.isAdmin)
       };
 
       const item = document.createElement("div");
-      item.className = "msg-item";
+      item.className = "msg-item" + (msgRecord.isAdmin ? " admin-msg" : "");
       item.dataset.msgId = msgId;
 
       const head = document.createElement("div");
       head.className = "msg-head";
 
+      const authorWrap = document.createElement("span");
+      authorWrap.className = "msg-author-wrap";
+
+      if (msgRecord.isAdmin) {
+        authorWrap.appendChild(createAdminShieldSvg());
+      }
+
       const authorSpan = document.createElement("span");
+      authorSpan.className = "msg-author-name";
       authorSpan.textContent = msgRecord.author;
+      authorWrap.appendChild(authorSpan);
 
       const rightWrap = document.createElement("span");
       rightWrap.className = "msg-meta-right";
@@ -2290,7 +2411,7 @@
       rightWrap.appendChild(timeSpan);
       rightWrap.appendChild(delBtn);
 
-      head.appendChild(authorSpan);
+      head.appendChild(authorWrap);
       head.appendChild(rightWrap);
 
       const body = document.createElement("div");
@@ -2376,7 +2497,8 @@
         id: "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
         author: currentNick,
         text,
-        time
+        time,
+        isAdmin: isOperator
       }, true, false, true);
       chatInput.value = "";
     }
