@@ -1183,7 +1183,7 @@ Sohbet adı:
 </div>
 </main>
 <script>
-const FIREBASE_DB_URL = "https://leds-32531-default-rtdb.europe-west1.firebasedatabase.app/";
+const FIREBASE_DB_URL = "https://leds-32531-default-rtdb.europe-west1.firebasedatabase.app";
 const FIREBASE_CHAT_NODE = "nbhd_marina_2027_global_chat";
 const FIREBASE_PRESENCE_NODE = "nbhd_marina_2027_presence";
 const MOON_BG_CSS = "url('./bg.jpg') center/cover no-repeat, radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28) 0%, rgba(147,197,253,0.12) 28%, transparent 55%), linear-gradient(180deg, #3c74b8 0%, #4d85c9 48%, #6399d8 100%)";
@@ -1196,24 +1196,27 @@ const STORAGE_KEY_STATE = "nbhd_marina_cached_state_v14";
 const STORAGE_KEY_QUEUE = "nbhd_marina_offline_queue_v14";
 const STORAGE_KEY_CHAT = "nbhd_marina_chat_history_v14";
 const MAX_STORED_MESSAGES = 200;
+
 function getOrCreateDeviceId() {
 try {
 let id = sessionStorage.getItem("nbhd_device_session_id");
 if (!id) {
-id = "dev_" + Date.now().toString(36) + "" + Math.random().toString(36).slice(2, 8);
+id = "dev_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
 sessionStorage.setItem("nbhd_device_session_id", id);
 }
 return id;
 } catch (e) {
-return "dev" + Math.random().toString(36).slice(2, 10);
+return "dev_" + Math.random().toString(36).slice(2, 10);
 }
 }
 const tabId = getOrCreateDeviceId();
+
 const ZONE_LABELS = {
 diamond_balcony: "Diamond / Balcony",
 golden: "Golden",
 silver: "Silver"
 };
+
 const SETLIST_SCENES = [
 { key: "s01", name: "Zombie", sub: "Yeşil ↔ Mor Geçiş", swatch: "#16a34a", mode: "alt", colors: ["#16a34a", "#7e22ce"], interval: 1600 },
 { key: "s02", name: "Sweater Weather", sub: "Beyaz Sabit", swatch: "#ffffff", mode: "solid", color: "#ffffff" },
@@ -1236,6 +1239,7 @@ const SETLIST_SCENES = [
 { key: "s19", name: "Cherry Flavoured", sub: "Kiraz Kırmızısı Sabit", swatch: "#e11d48", mode: "solid", color: "#e11d48" },
 { key: "s20", name: "Stuck With Me", sub: "Beyaz • Gümüş Finale", swatch: "#e4e4e7", mode: "pulse", bg: "linear-gradient(135deg, #a1a1aa 0%, #ffffff 100%)" }
 ];
+
 const ledCanvas = document.getElementById("ledCanvas");
 const pureLedBtn = document.getElementById("pureLedBtn");
 const holdExitBtn = document.getElementById("holdExitBtn");
@@ -1317,6 +1321,7 @@ const chatFeed = document.getElementById("chatFeed");
 const chatEmpty = document.getElementById("chatEmpty");
 const chatInput = document.getElementById("chatInput");
 const sendChatBtn = document.getElementById("sendChatBtn");
+
 let effectTimer = null;
 let countdownTimer = null;
 let effectStep = 0;
@@ -1344,13 +1349,16 @@ let cloudSyncReady = false;
 let isPullingCloud = false;
 let isSyncingPresence = false;
 let globalOnlineCount = 1;
+
 const peers = new Map();
 peers.set(tabId, Date.now());
 const channel = ("BroadcastChannel" in window)
 ? new BroadcastChannel("nbhd_marina_2027_v14")
 : null;
-const cleanDbBase = FIREBASE_DB_URL.trim().replace(//+$/, "");
+
+const cleanDbBase = FIREBASE_DB_URL.trim().replace(/\/+$/, "");
 const hasGlobalCloud = cleanDbBase.startsWith("https://");
+
 function updateChatScopeTag() {
 if (!chatScopeTag) return;
 if (hasGlobalCloud) {
@@ -1362,21 +1370,23 @@ chatScopeTag.classList.add("local-only");
 }
 }
 updateChatScopeTag();
+
 function fetchWithTimeout(url, options = {}, timeoutMs = 4500) {
 if (typeof AbortController === "undefined") {
 return fetch(url, options);
 }
 const ctrl = new AbortController();
 const timer = setTimeout(() => ctrl.abort(), timeoutMs);
-return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+return fetch(url, Object.assign({}, options, { signal: ctrl.signal })).finally(() => clearTimeout(timer));
 }
+
 async function syncGlobalPresence() {
 if (!hasGlobalCloud || !navigator.onLine || isSyncingPresence) return;
 isSyncingPresence = true;
 const now = Date.now();
 try {
 await fetchWithTimeout(
-⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}/${encodeURIComponent(tabId)}.json⁠,
+cleanDbBase + "/" + FIREBASE_PRESENCE_NODE + "/" + encodeURIComponent(tabId) + ".json",
 {
 method: "PUT",
 headers: { "Content-Type": "application/json" },
@@ -1385,7 +1395,7 @@ body: JSON.stringify({ ts: now })
 4000
 );
 const res = await fetchWithTimeout(
-⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}.json?t=${now}⁠,
+cleanDbBase + "/" + FIREBASE_PRESENCE_NODE + ".json?t=" + now,
 { cache: "no-store" },
 4000
 );
@@ -1402,7 +1412,7 @@ const ts = val && typeof val.ts === "number" ? val.ts : 0;
 if (now - ts <= PRESENCE_TTL_MS) {
 activeDevices += 1;
 } else if (now - ts > PRESENCE_TTL_MS * 3) {
-fetch(⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}/${encodeURIComponent(id)}.json⁠, {
+fetch(cleanDbBase + "/" + FIREBASE_PRESENCE_NODE + "/" + encodeURIComponent(id) + ".json", {
 method: "DELETE"
 }).catch(() => {});
 }
@@ -1414,10 +1424,11 @@ updateNetworkUI();
 isSyncingPresence = false;
 }
 }
+
 function leaveGlobalPresence() {
 if (!hasGlobalCloud) return;
 try {
-fetch(⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}/${encodeURIComponent(tabId)}.json⁠, {
+fetch(cleanDbBase + "/" + FIREBASE_PRESENCE_NODE + "/" + encodeURIComponent(tabId) + ".json", {
 method: "DELETE",
 keepalive: true
 }).catch(() => {});
@@ -1425,6 +1436,7 @@ keepalive: true
 }
 window.addEventListener("pagehide", leaveGlobalPresence);
 window.addEventListener("beforeunload", leaveGlobalPresence);
+
 function createAdminShieldSvg() {
 const ns = "http://www.w3.org/2000/svg";
 const svg = document.createElementNS(ns, "svg");
@@ -1479,6 +1491,7 @@ g.appendChild(tip);
 svg.appendChild(g);
 return svg;
 }
+
 let savedChatMessages = [];
 try {
 const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY_CHAT) || "[]");
@@ -1486,11 +1499,13 @@ if (Array.isArray(parsed)) savedChatMessages = parsed;
 } catch (e) {
 savedChatMessages = [];
 }
+
 function persistChatHistory() {
 try {
 localStorage.setItem(STORAGE_KEY_CHAT, JSON.stringify(savedChatMessages.slice(-MAX_STORED_MESSAGES)));
 } catch (e) {}
 }
+
 function normalizeMessageRecord(data) {
 if (!data || typeof data.text !== "string" || typeof data.author !== "string") return null;
 const cleanText = data.text.trim().slice(0, 200);
@@ -1505,6 +1520,7 @@ ts: Number(data.ts || Date.now()),
 isAdmin: Boolean(data.isAdmin)
 };
 }
+
 async function cloudSaveMessage(msgRecord) {
 const clean = normalizeMessageRecord(msgRecord);
 if (!clean) return false;
@@ -1514,7 +1530,7 @@ return false;
 }
 try {
 const res = await fetchWithTimeout(
-⁠${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(clean.id)}.json⁠,
+cleanDbBase + "/" + FIREBASE_CHAT_NODE + "/" + encodeURIComponent(clean.id) + ".json",
 {
 method: "PUT",
 headers: { "Content-Type": "application/json" },
@@ -1532,6 +1548,7 @@ enqueuePacket({ type: "chat", payload: clean });
 return false;
 }
 }
+
 async function cloudDeleteMessage(msgId) {
 if (!msgId) return false;
 if (!hasGlobalCloud || !navigator.onLine) {
@@ -1540,7 +1557,7 @@ return false;
 }
 try {
 const res = await fetchWithTimeout(
-⁠${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(msgId)}.json⁠,
+cleanDbBase + "/" + FIREBASE_CHAT_NODE + "/" + encodeURIComponent(msgId) + ".json",
 { method: "DELETE" },
 4500
 );
@@ -1554,6 +1571,7 @@ enqueuePacket({ type: "chat_delete", id: msgId });
 return false;
 }
 }
+
 function renderAllMessagesFromState() {
 savedChatMessages.sort((a, b) => (a.ts || 0) - (b.ts || 0));
 savedChatMessages = savedChatMessages.slice(-MAX_STORED_MESSAGES);
@@ -1604,12 +1622,13 @@ chatFeed.appendChild(item);
 });
 chatFeed.scrollTop = chatFeed.scrollHeight;
 }
+
 async function pullGlobalChatHistory(notifyIncoming = false) {
 if (!hasGlobalCloud || !navigator.onLine || isPullingCloud) return;
 isPullingCloud = true;
 try {
 const res = await fetchWithTimeout(
-⁠${cleanDbBase}/${FIREBASE_CHAT_NODE}.json?t=${Date.now()}⁠,
+cleanDbBase + "/" + FIREBASE_CHAT_NODE + ".json?t=" + Date.now(),
 { cache: "no-store" },
 4500
 );
@@ -1619,7 +1638,7 @@ const previousIds = new Set(savedChatMessages.map((m) => m.id));
 const cloudList = (!raw || typeof raw !== "object")
 ? []
 : Object.entries(raw)
-.map(([key, item]) => normalizeMessageRecord({ ...(item || {}), id: (item && item.id) || key }))
+.map(([key, item]) => normalizeMessageRecord(Object.assign({}, item || {}, { id: (item && item.id) || key })))
 .filter(Boolean)
 .sort((a, b) => (a.ts || 0) - (b.ts || 0))
 .slice(-MAX_STORED_MESSAGES);
@@ -1668,6 +1687,7 @@ unreadDot.classList.add("visible");
 isPullingCloud = false;
 }
 }
+
 let isOnline = navigator.onLine;
 let offlineQueue = [];
 try {
@@ -1675,12 +1695,14 @@ offlineQueue = JSON.parse(localStorage.getItem(STORAGE_KEY_QUEUE) || "[]");
 } catch (e) {
 offlineQueue = [];
 }
+
 function saveOfflineQueue() {
 try {
 localStorage.setItem(STORAGE_KEY_QUEUE, JSON.stringify(offlineQueue.slice(-50)));
 } catch (e) {}
 updateNetworkUI();
 }
+
 function enqueuePacket(packet) {
 const exists = offlineQueue.some((item) => {
 if (packet.type === "chat" && item.type === "chat") {
@@ -1692,10 +1714,11 @@ return item.id === packet.id;
 return false;
 });
 if (!exists) {
-offlineQueue.push({ ...packet, queuedAt: Date.now() });
+offlineQueue.push(Object.assign({}, packet, { queuedAt: Date.now() }));
 saveOfflineQueue();
 }
 }
+
 function updateNetworkUI() {
 isOnline = navigator.onLine;
 const qLen = offlineQueue.length;
@@ -1703,7 +1726,7 @@ const personCount = hasGlobalCloud ? Math.max(globalOnlineCount, peers.size) : p
 if (isOnline) {
 syncDot.classList.remove("offline");
 netStatusPill.classList.remove("offline");
-netStatusPill.textContent = qLen > 0 ? ⁠${personCount} kişi (${qLen})⁠ : ⁠${personCount} kişi⁠;
+netStatusPill.textContent = qLen > 0 ? personCount + " kişi (" + qLen + ")" : personCount + " kişi";
 } else {
 syncDot.classList.add("offline");
 netStatusPill.classList.add("offline");
@@ -1712,12 +1735,13 @@ netStatusPill.textContent = "Auto Offline";
 if (!isOnline || qLen > 0) {
 queueBanner.classList.add("visible");
 queueBannerText.textContent = !isOnline
-? ⁠Auto Offline aktif • Işıklar yerel çalışıyor • Kuyruk: ${qLen}⁠
-: ⁠Bağlantı geldi • Kuyruktaki ${qLen} komut gönderiliyor...⁠;
+? "Auto Offline aktif • Işıklar yerel çalışıyor • Kuyruk: " + qLen
+: "Bağlantı geldi • Kuyruktaki " + qLen + " komut gönderiliyor...";
 } else {
 queueBanner.classList.remove("visible");
 }
 }
+
 function dispatchNetworkPacket(packet) {
 if (packet.type === "scene") {
 try {
@@ -1733,12 +1757,13 @@ if (!navigator.onLine) {
 enqueuePacket(packet);
 }
 }
+
 async function flushOfflineQueue() {
 if (!navigator.onLine || offlineQueue.length === 0) {
 updateNetworkUI();
 return;
 }
-const pending = [...offlineQueue];
+const pending = offlineQueue.slice();
 offlineQueue = [];
 saveOfflineQueue();
 for (const pkt of pending) {
@@ -1757,6 +1782,7 @@ enqueuePacket(pkt);
 updateNetworkUI();
 await pullGlobalChatHistory(false);
 }
+
 window.addEventListener("online", () => {
 updateNetworkUI();
 flushOfflineQueue();
@@ -1768,6 +1794,7 @@ updateNetworkUI();
 });
 btnFlushQueue.addEventListener("click", flushOfflineQueue);
 updateNetworkUI();
+
 function switchOpTab(tabIndex) {
 const targetX = tabIndex === 1 ? opPagesTrack.clientWidth : 0;
 opPagesTrack.scrollTo({ left: targetX, behavior: "smooth" });
@@ -1782,17 +1809,19 @@ const idx = opPagesTrack.scrollLeft > half ? 1 : 0;
 tabBtnControls.classList.toggle("active", idx === 0);
 tabBtnMap.classList.toggle("active", idx === 1);
 });
+
 btnMapTouchMode.addEventListener("click", () => {
 mapHoldMode = !mapHoldMode;
 btnMapTouchMode.textContent = mapHoldMode
 ? "Mod: Dokun & Kilitle (Kalıcı)"
 : "Mod: Parmağınla Boya / Sürükle";
 });
+
 function broadcastMapZones() {
 const color = mapBrushColor.value;
 const litNames = Object.entries(mapZonesLit)
-.filter(([, v]) => v)
-.map(([k]) => k.toUpperCase());
+.filter((entry) => entry[1])
+.map((entry) => entry[0].toUpperCase());
 mapPads.forEach((pad) => {
 const z = pad.dataset.mapZone;
 const isLit = Boolean(mapZonesLit[z]);
@@ -1804,14 +1833,16 @@ applyScene({
 key: "",
 kicker: "CANLI HARİTA KONTROLÜ",
 name: litNames.length ? litNames.join(" • ") : "Alan Beklemede",
-sub: litNames.length ? ⁠Aktif Bölge Işığı (${color.toUpperCase()})⁠ : "Haritadan bölgeye dokun",
+sub: litNames.length ? "Aktif Bölge Işığı (" + color.toUpperCase() + ")" : "Haritadan bölgeye dokun",
 mode: "zone_map",
-zones: { ...mapZonesLit },
-color
+zones: Object.assign({}, mapZonesLit),
+color: color
 }, true);
 }
+
 let isDraggingMap = false;
 let lastDraggedZone = "";
+
 function activateZoneUnderPointer(clientX, clientY, isInitialTap) {
 const el = document.elementFromPoint(clientX, clientY);
 const pad = el ? el.closest(".map-pad") : null;
@@ -1833,6 +1864,7 @@ broadcastMapZones();
 }
 }
 }
+
 tactileArena.addEventListener("pointerdown", (e) => {
 e.preventDefault();
 isDraggingMap = true;
@@ -1844,6 +1876,7 @@ if (!isDraggingMap) return;
 e.preventDefault();
 activateZoneUnderPointer(e.clientX, e.clientY, false);
 });
+
 function endMapDrag() {
 if (!isDraggingMap) return;
 isDraggingMap = false;
@@ -1855,6 +1888,7 @@ broadcastMapZones();
 }
 window.addEventListener("pointerup", endMapDrag);
 window.addEventListener("pointercancel", endMapDrag);
+
 btnMapClearAll.addEventListener("click", () => {
 mapZonesLit = { balcony: false, diamond: false, golden: false, silver: false };
 broadcastMapZones();
@@ -1871,9 +1905,11 @@ flushOfflineQueue();
 pullGlobalChatHistory(false);
 syncGlobalPresence();
 });
+
 closeBrightnessTip.addEventListener("click", () => {
 brightnessTip.classList.add("hidden");
 });
+
 let wakeLock = null;
 async function requestWakeLock() {
 try {
@@ -1896,9 +1932,11 @@ syncGlobalPresence();
 }
 });
 requestWakeLock();
+
 let holdAnimFrame = null;
 let holdStartTime = 0;
 const HOLD_DURATION_MS = 1500;
+
 function enterPureLed() {
 pureLed = true;
 document.body.classList.add("pure-led");
@@ -1939,6 +1977,7 @@ holdExitBtn.addEventListener("pointerdown", startHoldExit);
 holdExitBtn.addEventListener("pointerup", cancelHoldExit);
 holdExitBtn.addEventListener("pointerleave", cancelHoldExit);
 holdExitBtn.addEventListener("pointercancel", cancelHoldExit);
+
 function setOperatorUnlocked(unlocked) {
 isOperator = unlocked;
 document.body.classList.toggle("op-mode", unlocked);
@@ -1980,12 +2019,14 @@ confirmPinBtn.addEventListener("click", tryUnlockOperator);
 pinInput.addEventListener("keydown", (e) => {
 if (e.key === "Enter") tryUnlockOperator();
 });
+
 function formatRemaining(ms) {
 const totalSec = Math.max(0, Math.ceil(ms / 1000));
 const min = String(Math.floor(totalSec / 60)).padStart(2, "0");
 const sec = String(totalSec % 60).padStart(2, "0");
-return ⁠${min}:${sec}⁠;
+return min + ":" + sec;
 }
+
 function updateZoneUI() {
 const now = Date.now();
 const remaining = zoneLockUntil - now;
@@ -1997,7 +2038,7 @@ lockedZoneTitle.textContent = ZONE_LABELS[selectedZone];
 if (remaining > 0) {
 unlockZoneBtn.disabled = true;
 unlockZoneBtn.textContent = formatRemaining(remaining);
-lockedZoneSub.textContent = ⁠Değiştirmek için ${formatRemaining(remaining)} bekle⁠;
+lockedZoneSub.textContent = "Değiştirmek için " + formatRemaining(remaining) + " bekle";
 } else {
 unlockZoneBtn.disabled = false;
 unlockZoneBtn.textContent = "Değiştir";
@@ -2009,16 +2050,18 @@ zoneLockedBar.classList.remove("visible");
 zoneHeaderLabel.textContent = "Ataköy Marina Bölümünü Seç";
 }
 }
+
 zoneButtons.forEach((btn) => {
 btn.addEventListener("click", () => {
 const chosen = btn.dataset.zone;
 if (!ZONE_LABELS[chosen]) return;
 pendingZoneChoice = chosen;
 zoneWarningText.innerHTML =
-⁠<strong>${ZONE_LABELS[chosen]}</strong> bölümünü seçmek üzeresin. Onayladıktan sonra seçim paneli kapanacak ve <strong>10 dakika</strong> boyunca bölüm değiştiremeyeceksin.⁠;
+"<strong>" + ZONE_LABELS[chosen] + "</strong> bölümünü seçmek üzeresin. Onayladıktan sonra seçim paneli kapanacak ve <strong>10 dakika</strong> boyunca bölüm değiştiremeyeceksin.";
 zoneConfirmModal.classList.add("open");
 });
 });
+
 function closeZoneModal() {
 pendingZoneChoice = "";
 zoneConfirmModal.classList.remove("open");
@@ -2041,6 +2084,7 @@ selectedZone = "";
 localStorage.removeItem("nbhd_marina_zone_v14");
 updateZoneUI();
 });
+
 function renderSceneCarousel() {
 sceneScroller.innerHTML = "";
 SETLIST_SCENES.forEach((scene, idx) => {
@@ -2049,11 +2093,14 @@ const card = document.createElement("button");
 card.type = "button";
 card.className = "scene-card";
 card.dataset.sceneKey = scene.key;
-card.innerHTML = ⁠<span class="scene-card-num"><span class="scene-swatch" style="background:${scene.swatch}"></span>#${num}</span> <span class="scene-card-title">${scene.name}</span> <span class="scene-card-sub">${scene.sub}</span>⁠;
+card.innerHTML =
+'<span class="scene-card-num"><span class="scene-swatch" style="background:' + scene.swatch + '"></span>#' + num + '</span>' +
+'<span class="scene-card-title">' + scene.name + '</span>' +
+'<span class="scene-card-sub">' + scene.sub + '</span>';
 card.addEventListener("click", () => {
 applyScene({
 key: scene.key,
-kicker: ⁠SETLIST • ${num}⁠,
+kicker: "SETLIST • " + num,
 name: scene.name,
 sub: scene.sub,
 mode: scene.mode,
@@ -2069,6 +2116,7 @@ sceneScroller.appendChild(card);
 });
 }
 renderSceneCarousel();
+
 function resetEffects() {
 if (effectTimer) {
 clearInterval(effectTimer);
@@ -2081,11 +2129,13 @@ countdownTimer = null;
 ledCanvas.classList.remove("soft-pulse");
 ledCanvas.style.opacity = "1";
 }
+
 function setActiveSceneCard(key) {
 document.querySelectorAll(".scene-card").forEach((c) => {
 c.classList.toggle("active", c.dataset.sceneKey === key);
 });
 }
+
 function formatConcertCountdown() {
 const diff = CONCERT_TARGET_TS - Date.now();
 if (diff <= 0) {
@@ -2096,8 +2146,9 @@ const days = Math.floor(totalSec / 86400);
 const hours = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, "0");
 const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
 const secs = String(totalSec % 60).padStart(2, "0");
-return ⁠${days}g ${hours}s ${mins}d ${secs}sn⁠;
+return days + "g " + hours + "s " + mins + "d " + secs + "sn";
 }
+
 function applyScene(state, broadcast = true) {
 currentSceneState = state;
 resetEffects();
@@ -2105,6 +2156,7 @@ if (state.key !== undefined) setActiveSceneCard(state.key);
 if (state.kicker) stageKicker.textContent = state.kicker;
 if (state.name) stageName.textContent = state.name;
 if (state.sub !== undefined) stageSub.textContent = state.sub;
+
 if (state.mode === "zone_map" && state.zones) {
 const userZone = selectedZone || "diamond_balcony";
 let isUserZoneLit = false;
@@ -2164,10 +2216,12 @@ ledCanvas.style.background = "#060608";
 } else if (state.mode === "custom" && state.color) {
 ledCanvas.style.background = state.color;
 }
+
 if (broadcast) {
 dispatchNetworkPacket({ type: "scene", payload: state });
 }
 }
+
 btnCountdownMode.addEventListener("click", () => {
 applyScene({
 key: "",
@@ -2177,6 +2231,7 @@ sub: "Ataköy Marina Açık Hava Sahnesi",
 mode: "countdown"
 });
 });
+
 btnScatterStart.addEventListener("click", () => {
 const cA = scatterColorA.value;
 const cB = scatterColorB.value;
@@ -2184,12 +2239,13 @@ applyScene({
 key: "",
 kicker: "KARIŞIK DAĞILIM",
 name: "Tribün Konfeti",
-sub: ⁠${cA.toUpperCase()} & ${cB.toUpperCase()} Karışık⁠,
+sub: cA.toUpperCase() + " & " + cB.toUpperCase() + " Karışık",
 mode: "scatter",
 colorA: cA,
 colorB: cB
 });
 });
+
 btnWaveFB.addEventListener("click", () => {
 applyScene({
 key: "",
@@ -2199,6 +2255,7 @@ sub: "Diamond / Balcony → Golden → Silver",
 mode: "wave_fb"
 });
 });
+
 btnWaveBF.addEventListener("click", () => {
 applyScene({
 key: "",
@@ -2208,6 +2265,7 @@ sub: "Silver → Golden → Diamond / Balcony",
 mode: "wave_bf"
 });
 });
+
 function setTorchState(active, broadcast = true) {
 torchActive = active;
 torchBanner.classList.toggle("visible", torchActive);
@@ -2218,6 +2276,7 @@ dispatchNetworkPacket({ type: "torch", payload: torchActive });
 }
 }
 btnTorchToggle.addEventListener("click", () => setTorchState(!torchActive));
+
 btnBlackout.addEventListener("click", () => {
 applyScene({
 key: "",
@@ -2227,6 +2286,7 @@ sub: "Siyah Ekran",
 mode: "blackout"
 });
 });
+
 btnCustomColor.addEventListener("click", () => {
 const hex = colorPicker.value;
 applyScene({
@@ -2238,6 +2298,7 @@ mode: "custom",
 color: hex
 });
 });
+
 function setTicker(text, broadcast = true) {
 const clean = (text || "").trim();
 if (!clean) {
@@ -2262,6 +2323,7 @@ announceInput.value = "";
 }
 });
 btnClearAnnounce.addEventListener("click", () => setTicker(""));
+
 function setChatFrozenState(frozen, broadcast = true) {
 chatFrozen = Boolean(frozen);
 btnChatFreeze.textContent = chatFrozen ? "Sohbet: Kilitli" : "Sohbeti Kilitle: Açık";
@@ -2272,6 +2334,7 @@ dispatchNetworkPacket({ type: "chat_freeze", payload: chatFrozen });
 }
 }
 btnChatFreeze.addEventListener("click", () => setChatFrozenState(!chatFrozen));
+
 function syncChatLockAndNickUI() {
 const hasNick = currentNick.length >= 2;
 const now = Date.now();
@@ -2291,17 +2354,17 @@ chatInput.placeholder = "Sohbet şu an kapalı...";
 } else if (timeoutLeft > 0) {
 const sec = Math.ceil(timeoutLeft / 1000);
 chatStatusNotice.classList.add("visible");
-chatStatusNotice.textContent = ⁠Çok hızlı yazdın • ${sec} sn timeout⁠;
+chatStatusNotice.textContent = "Çok hızlı yazdın • " + sec + " sn timeout";
 chatInput.disabled = true;
 sendChatBtn.disabled = true;
-chatInput.placeholder = ⁠Bekle (${sec} sn)...⁠;
+chatInput.placeholder = "Bekle (" + sec + " sn)...";
 } else {
 chatStatusNotice.classList.remove("visible");
 chatInput.disabled = false;
 sendChatBtn.disabled = false;
 chatInput.placeholder = isOperator
-? ⁠${currentNick} (Admin) olarak yaz...⁠
-: ⁠${currentNick} olarak mesaj yaz...⁠;
+? currentNick + " (Admin) olarak yaz..."
+: currentNick + " olarak mesaj yaz...";
 }
 } else {
 nickGateBox.style.display = "flex";
@@ -2317,6 +2380,7 @@ sendChatBtn.disabled = true;
 chatInput.placeholder = "Önce kullanıcı adını gir...";
 }
 }
+
 function confirmNick() {
 const val = nickInput.value.trim();
 if (val.length < 2) {
@@ -2339,6 +2403,7 @@ localStorage.removeItem("nbhd_nick_v14");
 syncChatLockAndNickUI();
 nickInput.focus();
 });
+
 function toggleChat(open) {
 chatOpen = open;
 chatSheet.classList.toggle("open", chatOpen);
@@ -2355,6 +2420,7 @@ chatInput.focus();
 }
 chatToggleBtn.addEventListener("click", () => toggleChat(!chatOpen));
 chatCloseBtn.addEventListener("click", () => toggleChat(false));
+
 function deleteChatMessage(msgId, broadcast = true) {
 if (!msgId) return;
 savedChatMessages = savedChatMessages.filter((m) => m.id !== msgId);
@@ -2364,6 +2430,7 @@ if (broadcast) {
 dispatchNetworkPacket({ type: "chat_delete", id: msgId });
 }
 }
+
 function pushMessage(data, broadcast = true, incoming = false, saveToStorage = true) {
 const msgRecord = normalizeMessageRecord(data);
 if (!msgRecord) return;
@@ -2387,15 +2454,18 @@ payload: msgRecord
 });
 }
 }
+
 function restoreChatHistory() {
 renderAllMessagesFromState();
 }
+
 function triggerChatTimeout() {
 chatTimeoutUntil = Date.now() + CHAT_TIMEOUT_MS;
 localStorage.setItem("nbhd_chat_timeout_v14", String(chatTimeoutUntil));
 recentMsgTimestamps = [];
 syncChatLockAndNickUI();
 }
+
 function handleSendChat() {
 if (currentNick.length < 2) {
 syncChatLockAndNickUI();
@@ -2427,12 +2497,12 @@ recentMsgTimestamps.push(now);
 lastSentMessage = text;
 }
 const d = new Date();
-const time = ⁠${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}⁠;
+const time = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
 pushMessage({
 id: "m_" + now + "_" + Math.random().toString(36).slice(2, 7),
 author: currentNick,
-text,
-time,
+text: text,
+time: time,
 ts: now,
 isAdmin: isOperator
 }, true, false, true);
@@ -2442,6 +2512,7 @@ sendChatBtn.addEventListener("click", handleSendChat);
 chatInput.addEventListener("keydown", (e) => {
 if (e.key === "Enter") handleSendChat();
 });
+
 function updatePeerCount() {
 const now = Date.now();
 peers.set(tabId, now);
@@ -2450,11 +2521,13 @@ if (now - ts > 8000) peers.delete(id);
 }
 updateNetworkUI();
 }
+
 setInterval(() => {
 updateZoneUI();
 syncChatLockAndNickUI();
 updateNetworkUI();
 }, 1000);
+
 setInterval(() => {
 updatePeerCount();
 if (channel && navigator.onLine) {
@@ -2465,6 +2538,7 @@ pullGlobalChatHistory(true);
 syncGlobalPresence();
 }
 }, 4500);
+
 if (channel) {
 channel.postMessage({ type: "ping", id: tabId });
 channel.onmessage = (e) => {
@@ -2482,11 +2556,13 @@ if (msg.type === "chat_delete") deleteChatMessage(msg.id, false);
 if (msg.type === "chat_freeze") setChatFrozenState(msg.payload, false);
 };
 }
+
 restoreChatHistory();
 pullGlobalChatHistory(false);
 syncGlobalPresence();
 updateZoneUI();
 syncChatLockAndNickUI();
+
 let restoredScene = null;
 try {
 restoredScene = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE) || "null");
