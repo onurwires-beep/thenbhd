@@ -1,2746 +1,2507 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>THE NBHD • ATAKÖY MARINA 2027</title>
-  <style>
-    :root {
-      --led: #16a34a;
-      --ink: #f5f5f7;
-      --muted: rgba(245, 245, 247, 0.58);
-      --glass: rgba(8, 8, 10, 0.86);
-      --line: rgba(255, 255, 255, 0.12);
-      --line-strong: rgba(255, 255, 255, 0.24);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-      width: 100%;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
-      background: var(--led);
-      color: var(--ink);
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    .led-canvas {
-      position: fixed;
-      inset: 0;
-      background: var(--led);
-      z-index: 0;
-      transition: background 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
-      pointer-events: none;
-    }
-
-    .led-vignette {
-      position: fixed;
-      inset: 0;
-      z-index: 1;
-      pointer-events: none;
-      background: radial-gradient(circle at 50% 35%, transparent 30%, rgba(0, 0, 0, 0.34) 100%);
-    }
-
-    .soft-pulse {
-      animation: ambientBreath 2.8s ease-in-out infinite;
-    }
-
-    @keyframes ambientBreath {
-      0%, 100% { opacity: 0.28; }
-      50% { opacity: 1; }
-    }
-
-    .viewport {
-      position: relative;
-      z-index: 2;
-      min-height: 100vh;
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 16px 16px 88px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 14px;
-    }
-
-    .top-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-    }
-
-    .hud-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: var(--glass);
-      border: 1px solid var(--line);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .brand-left {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-weight: 700;
-    }
-
-    .sync-pulse {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 8px #22c55e;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .sync-pulse.offline {
-      background: #f59e0b;
-      box-shadow: 0 0 8px #f59e0b;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .net-pill {
-      padding: 3px 9px;
-      border-radius: 999px;
-      background: rgba(34, 197, 94, 0.16);
-      border: 1px solid rgba(34, 197, 94, 0.35);
-      color: #86efac;
-      font-size: 10px;
-      font-weight: 750;
-      letter-spacing: 0.04em;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .net-pill.offline {
-      background: rgba(245, 158, 11, 0.18);
-      border-color: rgba(245, 158, 11, 0.45);
-      color: #fcd34d;
-    }
-
-    .op-trigger {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      cursor: pointer;
-    }
-
-    .op-trigger.unlocked {
-      color: #ffffff;
-    }
-
-    .brightness-tip {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 9px 13px;
-      border-radius: 13px;
-      background: rgba(8, 8, 10, 0.78);
-      border: 1px solid var(--line-strong);
-      backdrop-filter: blur(14px);
-      font-size: 11.5px;
-      line-height: 1.35;
-    }
-
-    .brightness-tip.hidden {
-      display: none;
-    }
-
-    .brightness-tip strong {
-      color: #ffffff;
-      font-weight: 700;
-    }
-
-    .tip-close {
-      background: rgba(255, 255, 255, 0.08);
-      border: none;
-      color: var(--ink);
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      font-size: 12px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    .ticker {
-      display: none;
-      padding: 11px 14px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.96);
-      color: #09090b;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-    }
-
-    .ticker.visible {
-      display: block;
-    }
-
-    .ticker-label {
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      opacity: 0.55;
-      margin-bottom: 2px;
-    }
-
-    .ticker-text {
-      font-size: 13px;
-      font-weight: 650;
-      line-height: 1.35;
-    }
-
-    .torch-banner {
-      display: none;
-      padding: 14px 16px;
-      border-radius: 16px;
-      background: #09090b;
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.35);
-      text-align: center;
-      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-    }
-
-    .torch-banner.visible {
-      display: block;
-    }
-
-    .torch-title {
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .torch-sub {
-      font-size: 11.5px;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-
-    .center-stage {
-      text-align: center;
-      padding: 18px 12px;
-      user-select: none;
-    }
-
-    .stage-kicker {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.85);
-      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
-      margin-bottom: 6px;
-    }
-
-    .stage-name {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      color: #ffffff;
-      text-shadow: 0 4px 24px rgba(0, 0, 0, 0.42);
-      font-variant-numeric: tabular-nums;
-    }
-
-    .stage-sub {
-      font-size: 12px;
-      letter-spacing: 0.04em;
-      color: rgba(255, 255, 255, 0.88);
-      margin-top: 4px;
-      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
-    }
-
-    .stack-bottom {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .console {
-      background: var(--glass);
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      padding: 15px;
-      backdrop-filter: blur(22px);
-      -webkit-backdrop-filter: blur(22px);
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-      display: flex;
-      flex-direction: column;
-      gap: 13px;
-    }
-
-    .operator-only {
-      display: none;
-    }
-
-    .operator-only.unlocked {
-      display: flex;
-    }
-
-    .block-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 7px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .venue-map {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      padding: 8px;
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--line);
-    }
-
-    .venue-stage {
-      text-align: center;
-      font-size: 9.5px;
-      font-weight: 800;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      padding: 5px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--line);
-    }
-
-    .zone-btn {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      padding: 10px 8px;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.18s ease;
-      text-align: center;
-    }
-
-    .zone-btn:hover {
-      border-color: var(--line-strong);
-      color: var(--ink);
-    }
-
-    .zone-locked-bar {
-      display: none;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--line);
-    }
-
-    .zone-locked-bar.visible {
-      display: flex;
-    }
-
-    .zone-locked-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .zone-locked-name {
-      font-size: 12.5px;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-
-    .zone-locked-sub {
-      font-size: 10.5px;
-      color: var(--muted);
-    }
-
-    .op-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      padding: 4px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--line);
-    }
-
-    .op-tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      padding: 7px 8px;
-      border-radius: 9px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      transition: all 0.16s ease;
-    }
-
-    .op-tab-btn.active {
-      background: #ffffff;
-      color: #09090b;
-    }
-
-    .op-pages-track {
-      display: flex;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      scroll-behavior: smooth;
-      scrollbar-width: none;
-      gap: 14px;
-    }
-
-    .op-pages-track::-webkit-scrollbar {
-      display: none;
-    }
-
-    .op-page {
-      flex: 0 0 100%;
-      width: 100%;
-      scroll-snap-align: start;
-      display: flex;
-      flex-direction: column;
-      gap: 13px;
-    }
-
-    .tactile-arena-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--line);
-      touch-action: none;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .tactile-stage {
-      width: 68%;
-      margin: 0 auto 2px;
-      padding: 7px 10px;
-      border-radius: 0 0 12px 12px;
-      background: #6b7280;
-      color: #ffffff;
-      text-align: center;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
-    }
-
-    .tactile-plan-body {
-      width: 72%;
-      margin: 0 auto;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .tactile-top-row {
-      display: flex;
-      gap: 4px;
-      height: 54px;
-    }
-
-    .map-pad {
-      border-radius: 7px;
-      border: 2px solid rgba(255, 255, 255, 0.16);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #ffffff;
-      cursor: pointer;
-      transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .map-pad.balcony-pad {
-      flex: 0 0 28px;
-      background: rgba(168, 85, 247, 0.32);
-      border-color: rgba(168, 85, 247, 0.65);
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      font-size: 8px;
-      letter-spacing: 0.12em;
-    }
-
-    .map-pad.diamond-pad {
-      flex: 1;
-      background: rgba(3, 105, 161, 0.35);
-      border-color: rgba(14, 165, 233, 0.65);
-      font-size: 12px;
-    }
-
-    .map-pad.golden-pad {
-      height: 82px;
-      background: rgba(234, 179, 8, 0.28);
-      border-color: rgba(250, 204, 21, 0.6);
-      font-size: 12.5px;
-      color: #fef9c3;
-    }
-
-    .map-pad.silver-pad {
-      height: 68px;
-      background: rgba(13, 148, 136, 0.35);
-      border-color: rgba(45, 212, 191, 0.65);
-      font-size: 12px;
-    }
-
-    .map-pad.lit {
-      background: var(--pad-glow, #ffffff) !important;
-      color: #09090b !important;
-      border-color: #ffffff !important;
-      box-shadow: 0 0 22px var(--pad-glow, rgba(255, 255, 255, 0.75));
-    }
-
-    .map-pad.balcony-pad.lit {
-      transform: rotate(180deg) scale(1.03);
-    }
-
-    .map-pad:not(.balcony-pad).lit {
-      transform: scale(1.02);
-    }
-
-    .queue-banner {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 8px 11px;
-      border-radius: 10px;
-      background: rgba(245, 158, 11, 0.14);
-      border: 1px solid rgba(245, 158, 11, 0.4);
-      color: #fcd34d;
-      font-size: 11px;
-      font-weight: 650;
-    }
-
-    .queue-banner.visible {
-      display: flex;
-    }
-
-    .scene-scroller {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scroll-snap-type: x mandatory;
-      padding-bottom: 4px;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
-    }
-
-    .scene-scroller::-webkit-scrollbar {
-      display: none;
-    }
-
-    .scene-card {
-      flex: 0 0 132px;
-      scroll-snap-align: start;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--ink);
-      border: 1px solid var(--line);
-      border-radius: 13px;
-      padding: 10px 11px;
-      text-align: left;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .scene-card:hover {
-      background: rgba(255, 255, 255, 0.09);
-      border-color: var(--line-strong);
-    }
-
-    .scene-card.active {
-      background: #ffffff;
-      color: #09090b;
-      border-color: #ffffff;
-    }
-
-    .scene-card-num {
-      font-size: 9.5px;
-      font-weight: 800;
-      letter-spacing: 0.1em;
-      opacity: 0.55;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .scene-swatch {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      display: inline-block;
-      border: 1px solid rgba(128, 128, 128, 0.4);
-    }
-
-    .scene-card-title {
-      font-size: 12px;
-      font-weight: 750;
-      line-height: 1.25;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-    }
-
-    .scene-card-sub {
-      font-size: 10px;
-      opacity: 0.65;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      width: 100%;
-    }
-
-    .mode-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 7px;
-    }
-
-    .chip-btn {
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--ink);
-      border: 1px solid var(--line);
-      border-radius: 11px;
-      padding: 9px 8px;
-      font-size: 11.5px;
-      font-weight: 550;
-      cursor: pointer;
-      transition: background 0.15s ease, border-color 0.15s ease;
-    }
-
-    .chip-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--line-strong);
-    }
-
-    .chip-btn.active {
-      background: #ffffff;
-      color: #09090b;
-      border-color: #ffffff;
-      font-weight: 750;
-    }
-
-    .inline-bar {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-    }
-
-    input[type="color"] {
-      width: 38px;
-      height: 38px;
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      background: transparent;
-      padding: 2px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-
-    input[type="text"],
-    input[type="password"] {
-      flex: 1;
-      min-width: 0;
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--ink);
-      border: 1px solid var(--line);
-      border-radius: 11px;
-      padding: 10px 12px;
-      font-size: 12.5px;
-      outline: none;
-    }
-
-    input::placeholder {
-      color: rgba(245, 245, 247, 0.36);
-    }
-
-    input:focus {
-      border-color: var(--line-strong);
-    }
-
-    input:disabled {
-      opacity: 0.42;
-      cursor: not-allowed;
-    }
-
-    .action-btn {
-      background: #ffffff;
-      color: #09090b;
-      border: none;
-      border-radius: 11px;
-      padding: 10px 13px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .action-btn:disabled {
-      opacity: 0.35;
-      cursor: not-allowed;
-    }
-
-    .ghost-btn {
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid var(--line);
-      border-radius: 11px;
-      padding: 10px 11px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .ghost-btn:disabled {
-      opacity: 0.45;
-      cursor: not-allowed;
-    }
-
-    .pure-led .stack-bottom,
-    .pure-led .hud-header,
-    .pure-led .brightness-tip,
-    .pure-led .center-stage,
-    .pure-led .dock {
-      display: none !important;
-    }
-
-    .pure-lock-bar {
-      position: fixed;
-      left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%);
-      z-index: 45;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
-      width: calc(100vw - 48px);
-      max-width: 300px;
-      user-select: none;
-      -webkit-user-select: none;
-    }
-
-    .pure-led .pure-lock-bar {
-      display: flex;
-    }
-
-    .hold-exit-btn {
-      position: relative;
-      overflow: hidden;
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 999px;
-      background: rgba(8, 8, 10, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      backdrop-filter: blur(14px);
-      cursor: pointer;
-      touch-action: none;
-    }
-
-    .hold-progress {
-      position: absolute;
-      inset: 0;
-      width: 0%;
-      background: rgba(255, 255, 255, 0.28);
-      pointer-events: none;
-    }
-
-    .hold-label {
-      position: relative;
-      z-index: 1;
-    }
-
-    .dock {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      z-index: 40;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .dock-pill {
-      background: var(--glass);
-      color: var(--ink);
-      border: 1px solid var(--line-strong);
-      border-radius: 999px;
-      padding: 10px 15px;
-      font-size: 11.5px;
-      font-weight: 650;
-      letter-spacing: 0.03em;
-      backdrop-filter: blur(16px);
-      cursor: pointer;
-    }
-
-    .chat-trigger {
-      position: relative;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: #ffffff;
-      color: #09090b;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
-      cursor: pointer;
-    }
-
-    .badge-dot {
-      position: absolute;
-      top: 1px;
-      right: 1px;
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      background: #ef4444;
-      border: 2px solid #09090b;
-      display: none;
-    }
-
-    .badge-dot.visible {
-      display: block;
-    }
-
-    .chat-sheet {
-      position: fixed;
-      right: 16px;
-      bottom: 70px;
-      z-index: 39;
-      width: calc(100vw - 32px);
-      max-width: 340px;
-      background: rgba(10, 10, 13, 0.96);
-      border: 1px solid var(--line-strong);
-      border-radius: 20px;
-      padding: 14px;
-      backdrop-filter: blur(22px);
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
-      display: none;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chat-sheet.open {
-      display: flex;
-    }
-
-    .chat-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .chat-head-title {
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .chat-scope-tag {
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 2px 7px;
-      border-radius: 999px;
-      background: rgba(34, 197, 94, 0.14);
-      border: 1px solid rgba(34, 197, 94, 0.35);
-      color: #86efac;
-      margin-left: 6px;
-    }
-
-    .chat-scope-tag.local-only {
-      background: rgba(245, 158, 11, 0.15);
-      border-color: rgba(245, 158, 11, 0.35);
-      color: #fcd34d;
-    }
-
-    .nick-gate {
-      padding: 10px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--line);
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .nick-gate-hint {
-      font-size: 11.5px;
-      color: var(--muted);
-      line-height: 1.45;
-    }
-
-    .nick-badge-row {
-      display: none;
-      justify-content: space-between;
-      align-items: center;
-      padding: 7px 10px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--line);
-      font-size: 11.5px;
-    }
-
-    .nick-badge-row.visible {
-      display: flex;
-    }
-
-    .status-notice {
-      display: none;
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: rgba(239, 68, 68, 0.14);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      color: #fca5a5;
-      font-size: 11px;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    .status-notice.visible {
-      display: block;
-    }
-
-    .chat-feed {
-      height: 195px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-      padding: 10px;
-      border-radius: 13px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--line);
-    }
-
-    .chat-empty {
-      margin: auto 0;
-      text-align: center;
-      font-size: 11.5px;
-      color: var(--muted);
-    }
-
-    .msg-item {
-      padding: 8px 10px;
-      border-radius: 10px;
-      background: rgba(255, 255, 255, 0.06);
-      font-size: 12.5px;
-      line-height: 1.4;
-      word-break: break-word;
-    }
-
-    .msg-item.admin-msg {
-      background: rgba(239, 68, 68, 0.11);
-      border: 1px solid rgba(239, 68, 68, 0.34);
-    }
-
-    .msg-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 10.5px;
-      color: var(--muted);
-      margin-bottom: 2px;
-      font-weight: 600;
-    }
-
-    .msg-author-wrap {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      min-width: 0;
-    }
-
-    .msg-item.admin-msg .msg-author-name {
-      color: #fca5a5;
-      font-weight: 750;
-    }
-
-    .admin-shield-icon {
-      width: 13px;
-      height: 14px;
-      flex-shrink: 0;
-      display: inline-block;
-      vertical-align: middle;
-      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
-    }
-
-    .msg-meta-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .msg-del-btn {
-      display: none;
-      background: rgba(239, 68, 68, 0.22);
-      border: 1px solid rgba(239, 68, 68, 0.45);
-      color: #fca5a5;
-      width: 18px;
-      height: 18px;
-      border-radius: 5px;
-      font-size: 12px;
-      line-height: 1;
-      cursor: pointer;
-      align-items: center;
-      justify-content: center;
-    }
-
-    body.op-mode .msg-del-btn {
-      display: inline-flex;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 50;
-      background: rgba(0, 0, 0, 0.76);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .modal-backdrop.open {
-      display: flex;
-    }
-
-    .modal-card {
-      width: 100%;
-      max-width: 330px;
-      background: #0c0c0f;
-      border: 1px solid var(--line-strong);
-      border-radius: 18px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 11px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>THE NBHD • ATAKÖY MARINA 2027</title>
+<style>
+:root {
+--moon-bg: url('./bg.jpg') center/cover no-repeat, radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28) 0%, rgba(147,197,253,0.12) 28%, transparent 55%), linear-gradient(180deg, #3c74b8 0%, #4d85c9 48%, #6399d8 100%);
+--led: var(--moon-bg);
+--ink: #f5f5f7;
+--muted: rgba(245, 245, 247, 0.68);
+--glass: rgba(8, 8, 10, 0.78);
+--line: rgba(255, 255, 255, 0.16);
+--line-strong: rgba(255, 255, 255, 0.28);
+}
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+html, body {
+height: 100%;
+width: 100%;
+font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", sans-serif;
+background: #477ec3;
+color: var(--ink);
+overflow-x: hidden;
+overscroll-behavior-y: none;
+-webkit-font-smoothing: antialiased;
+}
+.led-canvas {
+position: fixed;
+inset: 0;
+background: var(--led);
+background-size: cover;
+background-position: center;
+z-index: 0;
+transition: background 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+pointer-events: none;
+}
+.led-vignette {
+position: fixed;
+inset: 0;
+z-index: 1;
+pointer-events: none;
+background: radial-gradient(circle at 50% 35%, transparent 32%, rgba(9, 18, 36, 0.26) 100%);
+}
+.soft-pulse {
+animation: ambientBreath 2.8s ease-in-out infinite;
+}
+@keyframes ambientBreath {
+0%, 100% { opacity: 0.28; }
+50% { opacity: 1; }
+}
+.viewport {
+position: relative;
+z-index: 2;
+min-height: 100vh;
+max-width: 480px;
+margin: 0 auto;
+padding: 16px 16px 88px;
+display: flex;
+flex-direction: column;
+justify-content: space-between;
+gap: 14px;
+}
+.top-stack {
+display: flex;
+flex-direction: column;
+gap: 9px;
+}
+.hud-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 10px 14px;
+border-radius: 999px;
+background: var(--glass);
+border: 1px solid var(--line);
+backdrop-filter: blur(18px);
+-webkit-backdrop-filter: blur(18px);
+font-size: 11px;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+}
+.brand-left {
+display: flex;
+align-items: center;
+gap: 7px;
+font-weight: 700;
+}
+.sync-pulse {
+width: 7px;
+height: 7px;
+border-radius: 50%;
+background: #22c55e;
+box-shadow: 0 0 8px #22c55e;
+transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.sync-pulse.offline {
+background: #f59e0b;
+box-shadow: 0 0 8px #f59e0b;
+}
+.header-right {
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.net-pill {
+padding: 3px 9px;
+border-radius: 999px;
+background: rgba(34, 197, 94, 0.16);
+border: 1px solid rgba(34, 197, 94, 0.35);
+color: #86efac;
+font-size: 10px;
+font-weight: 750;
+letter-spacing: 0.04em;
+font-variant-numeric: tabular-nums;
+}
+.net-pill.offline {
+background: rgba(245, 158, 11, 0.18);
+border-color: rgba(245, 158, 11, 0.45);
+color: #fcd34d;
+}
+.op-trigger {
+background: transparent;
+border: none;
+color: var(--muted);
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.08em;
+cursor: pointer;
+}
+.op-trigger.unlocked {
+color: #ffffff;
+}
+.brightness-tip {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+padding: 9px 13px;
+border-radius: 13px;
+background: rgba(8, 8, 10, 0.76);
+border: 1px solid var(--line-strong);
+backdrop-filter: blur(14px);
+font-size: 11.5px;
+line-height: 1.35;
+}
+.brightness-tip.hidden {
+display: none;
+}
+.brightness-tip strong {
+color: #ffffff;
+font-weight: 700;
+}
+.tip-close {
+background: rgba(255, 255, 255, 0.08);
+border: none;
+color: var(--ink);
+width: 22px;
+height: 22px;
+border-radius: 50%;
+font-size: 12px;
+cursor: pointer;
+flex-shrink: 0;
+}
+.ticker {
+display: none;
+padding: 11px 14px;
+border-radius: 14px;
+background: rgba(255, 255, 255, 0.96);
+color: #09090b;
+box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.ticker.visible {
+display: block;
+}
+.ticker-label {
+font-size: 9px;
+font-weight: 800;
+letter-spacing: 0.14em;
+text-transform: uppercase;
+opacity: 0.55;
+margin-bottom: 2px;
+}
+.ticker-text {
+font-size: 13px;
+font-weight: 650;
+line-height: 1.35;
+}
+.torch-banner {
+display: none;
+padding: 14px 16px;
+border-radius: 16px;
+background: #09090b;
+color: #ffffff;
+border: 1px solid rgba(255, 255, 255, 0.35);
+text-align: center;
+box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+}
+.torch-banner.visible {
+display: block;
+}
+.torch-title {
+font-size: 13px;
+font-weight: 800;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+}
+.torch-sub {
+font-size: 11.5px;
+color: var(--muted);
+margin-top: 3px;
+}
+.center-stage {
+text-align: center;
+padding: 18px 12px;
+user-select: none;
+}
+.stage-kicker {
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 0.22em;
+text-transform: uppercase;
+color: rgba(255, 255, 255, 0.94);
+text-shadow: 0 2px 14px rgba(10, 22, 48, 0.72);
+margin-bottom: 6px;
+}
+.stage-name {
+font-size: 32px;
+font-weight: 800;
+letter-spacing: -0.03em;
+color: #ffffff;
+text-shadow: 0 4px 24px rgba(10, 22, 48, 0.75);
+font-variant-numeric: tabular-nums;
+}
+.stage-sub {
+font-size: 12px;
+letter-spacing: 0.04em;
+color: rgba(255, 255, 255, 0.94);
+margin-top: 4px;
+text-shadow: 0 2px 14px rgba(10, 22, 48, 0.72);
+}
+.stack-bottom {
+display: flex;
+flex-direction: column;
+gap: 12px;
+}
+.console {
+background: var(--glass);
+border: 1px solid var(--line);
+border-radius: 22px;
+padding: 15px;
+backdrop-filter: blur(22px);
+-webkit-backdrop-filter: blur(22px);
+box-shadow: 0 20px 50px rgba(0, 0, 0, 0.42);
+display: flex;
+flex-direction: column;
+gap: 13px;
+}
+.operator-only {
+display: none;
+}
+.operator-only.unlocked {
+display: flex;
+}
+.block-label {
+font-size: 10px;
+font-weight: 700;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(--muted);
+margin-bottom: 7px;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.venue-map {
+display: flex;
+flex-direction: column;
+gap: 6px;
+padding: 8px;
+border-radius: 14px;
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid var(--line);
+}
+.venue-stage {
+text-align: center;
+font-size: 9.5px;
+font-weight: 800;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+color: var(--muted);
+padding: 5px;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.07);
+border: 1px solid var(--line);
+}
+.zone-btn {
+width: 100%;
+background: rgba(255, 255, 255, 0.05);
+border: 1px solid var(--line);
+color: var(--muted);
+padding: 10px 8px;
+border-radius: 10px;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+cursor: pointer;
+transition: all 0.18s ease;
+text-align: center;
+}
+.zone-btn:hover {
+border-color: var(--line-strong);
+color: var(--ink);
+}
+.zone-locked-bar {
+display: none;
+justify-content: space-between;
+align-items: center;
+gap: 8px;
+padding: 10px 12px;
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.06);
+border: 1px solid var(--line);
+}
+.zone-locked-bar.visible {
+display: flex;
+}
+.zone-locked-info {
+display: flex;
+flex-direction: column;
+gap: 2px;
+}
+.zone-locked-name {
+font-size: 12.5px;
+font-weight: 800;
+letter-spacing: 0.05em;
+text-transform: uppercase;
+}
+.zone-locked-sub {
+font-size: 10.5px;
+color: var(--muted);
+}
+.op-tabs {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 6px;
+padding: 4px;
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid var(--line);
+}
+.op-tab-btn {
+background: transparent;
+border: none;
+color: var(--muted);
+padding: 7px 8px;
+border-radius: 9px;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.04em;
+cursor: pointer;
+transition: all 0.16s ease;
+}
+.op-tab-btn.active {
+background: #ffffff;
+color: #09090b;
+}
+.op-pages-track {
+display: flex;
+overflow-x: auto;
+scroll-snap-type: x mandatory;
+scroll-behavior: smooth;
+scrollbar-width: none;
+gap: 14px;
+}
+.op-pages-track::-webkit-scrollbar {
+display: none;
+}
+.op-page {
+flex: 0 0 100%;
+width: 100%;
+scroll-snap-align: start;
+display: flex;
+flex-direction: column;
+gap: 13px;
+}
+.tactile-arena-wrap {
+display: flex;
+flex-direction: column;
+gap: 8px;
+padding: 12px;
+border-radius: 16px;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid var(--line);
+touch-action: none;
+user-select: none;
+-webkit-user-select: none;
+}
+.tactile-stage {
+width: 68%;
+margin: 0 auto 2px;
+padding: 7px 10px;
+border-radius: 0 0 12px 12px;
+background: #6b7280;
+color: #ffffff;
+text-align: center;
+font-size: 10px;
+font-weight: 800;
+letter-spacing: 0.18em;
+text-transform: uppercase;
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+.tactile-plan-body {
+width: 72%;
+margin: 0 auto;
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+.tactile-top-row {
+display: flex;
+gap: 4px;
+height: 54px;
+}
+.map-pad {
+border-radius: 7px;
+border: 2px solid rgba(255, 255, 255, 0.16);
+display: flex;
+align-items: center;
+justify-content: center;
+font-weight: 800;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: #ffffff;
+cursor: pointer;
+transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+position: relative;
+overflow: hidden;
+}
+.map-pad.balcony-pad {
+flex: 0 0 28px;
+background: rgba(168, 85, 247, 0.32);
+border-color: rgba(168, 85, 247, 0.65);
+writing-mode: vertical-rl;
+transform: rotate(180deg);
+font-size: 8px;
+letter-spacing: 0.12em;
+}
+.map-pad.diamond-pad {
+flex: 1;
+background: rgba(3, 105, 161, 0.35);
+border-color: rgba(14, 165, 233, 0.65);
+font-size: 12px;
+}
+.map-pad.golden-pad {
+height: 82px;
+background: rgba(234, 179, 8, 0.28);
+border-color: rgba(250, 204, 21, 0.6);
+font-size: 12.5px;
+color: #fef9c3;
+}
+.map-pad.silver-pad {
+height: 68px;
+background: rgba(13, 148, 136, 0.35);
+border-color: rgba(45, 212, 191, 0.65);
+font-size: 12px;
+}
+.map-pad.lit {
+background: var(--pad-glow, #ffffff) !important;
+color: #09090b !important;
+border-color: #ffffff !important;
+box-shadow: 0 0 22px var(--pad-glow, rgba(255, 255, 255, 0.75));
+}
+.map-pad.balcony-pad.lit {
+transform: rotate(180deg) scale(1.03);
+}
+.map-pad:not(.balcony-pad).lit {
+transform: scale(1.02);
+}
+.queue-banner {
+display: none;
+align-items: center;
+justify-content: space-between;
+gap: 8px;
+padding: 8px 11px;
+border-radius: 10px;
+background: rgba(245, 158, 11, 0.14);
+border: 1px solid rgba(245, 158, 11, 0.4);
+color: #fcd34d;
+font-size: 11px;
+font-weight: 650;
+}
+.queue-banner.visible {
+display: flex;
+}
+.scene-scroller {
+display: flex;
+gap: 8px;
+overflow-x: auto;
+scroll-snap-type: x mandatory;
+padding-bottom: 4px;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+}
+.scene-scroller::-webkit-scrollbar {
+display: none;
+}
+.scene-card {
+flex: 0 0 132px;
+scroll-snap-align: start;
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+gap: 4px;
+background: rgba(255, 255, 255, 0.04);
+color: var(--ink);
+border: 1px solid var(--line);
+border-radius: 13px;
+padding: 10px 11px;
+text-align: left;
+cursor: pointer;
+transition: background 0.15s ease, border-color 0.15s ease;
+}
+.scene-card:hover {
+background: rgba(255, 255, 255, 0.09);
+border-color: var(--line-strong);
+}
+.scene-card.active {
+background: #ffffff;
+color: #09090b;
+border-color: #ffffff;
+}
+.scene-card-num {
+font-size: 9.5px;
+font-weight: 800;
+letter-spacing: 0.1em;
+opacity: 0.55;
+display: flex;
+align-items: center;
+gap: 5px;
+}
+.scene-swatch {
+width: 7px;
+height: 7px;
+border-radius: 50%;
+display: inline-block;
+border: 1px solid rgba(128, 128, 128, 0.4);
+}
+.scene-card-title {
+font-size: 12px;
+font-weight: 750;
+line-height: 1.25;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+width: 100%;
+}
+.scene-card-sub {
+font-size: 10px;
+opacity: 0.65;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+width: 100%;
+}
+.mode-grid {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+gap: 7px;
+}
+.chip-btn {
+background: rgba(255, 255, 255, 0.04);
+color: var(--ink);
+border: 1px solid var(--line);
+border-radius: 11px;
+padding: 9px 8px;
+font-size: 11.5px;
+font-weight: 550;
+cursor: pointer;
+transition: background 0.15s ease, border-color 0.15s ease;
+}
+.chip-btn:hover {
+background: rgba(255, 255, 255, 0.1);
+border-color: var(--line-strong);
+}
+.chip-btn.active {
+background: #ffffff;
+color: #09090b;
+border-color: #ffffff;
+font-weight: 750;
+}
+.inline-bar {
+display: flex;
+align-items: center;
+gap: 7px;
+}
+input[type="color"] {
+width: 38px;
+height: 38px;
+border: 1px solid var(--line);
+border-radius: 10px;
+background: transparent;
+padding: 2px;
+cursor: pointer;
+flex-shrink: 0;
+}
+input[type="text"],
+input[type="password"] {
+flex: 1;
+min-width: 0;
+background: rgba(255, 255, 255, 0.04);
+color: var(--ink);
+border: 1px solid var(--line);
+border-radius: 11px;
+padding: 10px 12px;
+font-size: 12.5px;
+outline: none;
+}
+input::placeholder {
+color: rgba(245, 245, 247, 0.36);
+}
+input:focus {
+border-color: var(--line-strong);
+}
+input:disabled {
+opacity: 0.42;
+cursor: not-allowed;
+}
+.action-btn {
+background: #ffffff;
+color: #09090b;
+border: none;
+border-radius: 11px;
+padding: 10px 13px;
+font-size: 12px;
+font-weight: 700;
+cursor: pointer;
+white-space: nowrap;
+}
+.action-btn:disabled {
+opacity: 0.35;
+cursor: not-allowed;
+}
+.ghost-btn {
+background: transparent;
+color: var(--muted);
+border: 1px solid var(--line);
+border-radius: 11px;
+padding: 10px 11px;
+font-size: 12px;
+font-weight: 600;
+cursor: pointer;
+white-space: nowrap;
+}
+.ghost-btn:disabled {
+opacity: 0.45;
+cursor: not-allowed;
+}
+.pure-led .stack-bottom,
+.pure-led .hud-header,
+.pure-led .brightness-tip,
+.pure-led .center-stage,
+.pure-led .dock {
+display: none !important;
+}
+.pure-lock-bar {
+position: fixed;
+left: 50%;
+bottom: 24px;
+transform: translateX(-50%);
+z-index: 45;
+display: none;
+flex-direction: column;
+align-items: center;
+gap: 6px;
+width: calc(100vw - 48px);
+max-width: 300px;
+user-select: none;
+-webkit-user-select: none;
+}
+.pure-led .pure-lock-bar {
+display: flex;
+}
+.hold-exit-btn {
+position: relative;
+overflow: hidden;
+width: 100%;
+padding: 12px 16px;
+border-radius: 999px;
+background: rgba(8, 8, 10, 0.72);
+border: 1px solid rgba(255, 255, 255, 0.28);
+color: #ffffff;
+font-size: 12px;
+font-weight: 700;
+letter-spacing: 0.04em;
+backdrop-filter: blur(14px);
+cursor: pointer;
+touch-action: none;
+}
+.hold-progress {
+position: absolute;
+inset: 0;
+width: 0%;
+background: rgba(255, 255, 255, 0.28);
+pointer-events: none;
+}
+.hold-label {
+position: relative;
+z-index: 1;
+}
+.dock {
+position: fixed;
+right: 16px;
+bottom: 16px;
+z-index: 40;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+.dock-pill {
+background: var(--glass);
+color: var(--ink);
+border: 1px solid var(--line-strong);
+border-radius: 999px;
+padding: 10px 15px;
+font-size: 11.5px;
+font-weight: 650;
+letter-spacing: 0.03em;
+backdrop-filter: blur(16px);
+cursor: pointer;
+}
+.chat-trigger {
+position: relative;
+width: 44px;
+height: 44px;
+border-radius: 50%;
+background: #ffffff;
+color: #09090b;
+border: none;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+cursor: pointer;
+}
+.badge-dot {
+position: absolute;
+top: 1px;
+right: 1px;
+width: 11px;
+height: 11px;
+border-radius: 50%;
+background: #ef4444;
+border: 2px solid #09090b;
+display: none;
+}
+.badge-dot.visible {
+display: block;
+}
+.chat-sheet {
+position: fixed;
+right: 16px;
+bottom: 70px;
+z-index: 39;
+width: calc(100vw - 32px);
+max-width: 340px;
+background: rgba(10, 10, 13, 0.96);
+border: 1px solid var(--line-strong);
+border-radius: 20px;
+padding: 14px;
+backdrop-filter: blur(22px);
+box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+display: none;
+flex-direction: column;
+gap: 10px;
+}
+.chat-sheet.open {
+display: flex;
+}
+.chat-head {
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+.chat-head-title {
+font-size: 13px;
+font-weight: 700;
+}
+.chat-scope-tag {
+font-size: 9.5px;
+font-weight: 700;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+padding: 2px 7px;
+border-radius: 999px;
+background: rgba(34, 197, 94, 0.14);
+border: 1px solid rgba(34, 197, 94, 0.35);
+color: #86efac;
+margin-left: 6px;
+}
+.chat-scope-tag.local-only {
+background: rgba(245, 158, 11, 0.15);
+border-color: rgba(245, 158, 11, 0.35);
+color: #fcd34d;
+}
+.nick-gate {
+padding: 10px;
+border-radius: 12px;
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid var(--line);
+display: flex;
+flex-direction: column;
+gap: 7px;
+}
+.nick-gate-hint {
+font-size: 11.5px;
+color: var(--muted);
+line-height: 1.45;
+}
+.nick-badge-row {
+display: none;
+justify-content: space-between;
+align-items: center;
+padding: 7px 10px;
+border-radius: 10px;
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid var(--line);
+font-size: 11.5px;
+}
+.nick-badge-row.visible {
+display: flex;
+}
+.status-notice {
+display: none;
+padding: 8px 10px;
+border-radius: 10px;
+background: rgba(239, 68, 68, 0.14);
+border: 1px solid rgba(239, 68, 68, 0.4);
+color: #fca5a5;
+font-size: 11px;
+font-weight: 600;
+text-align: center;
+}
+.status-notice.visible {
+display: block;
+}
+.chat-feed {
+height: 195px;
+overflow-y: auto;
+display: flex;
+flex-direction: column;
+gap: 7px;
+padding: 10px;
+border-radius: 13px;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid var(--line);
+}
+.chat-empty {
+margin: auto 0;
+text-align: center;
+font-size: 11.5px;
+color: var(--muted);
+}
+.msg-item {
+padding: 8px 10px;
+border-radius: 10px;
+background: rgba(255, 255, 255, 0.06);
+font-size: 12.5px;
+line-height: 1.4;
+word-break: break-word;
+}
+.msg-item.admin-msg {
+background: rgba(239, 68, 68, 0.11);
+border: 1px solid rgba(239, 68, 68, 0.34);
+}
+.msg-head {
+display: flex;
+justify-content: space-between;
+align-items: center;
+font-size: 10.5px;
+color: var(--muted);
+margin-bottom: 2px;
+font-weight: 600;
+}
+.msg-author-wrap {
+display: inline-flex;
+align-items: center;
+gap: 5px;
+min-width: 0;
+}
+.msg-item.admin-msg .msg-author-name {
+color: #fca5a5;
+font-weight: 750;
+}
+.admin-shield-icon {
+width: 13px;
+height: 14px;
+flex-shrink: 0;
+display: inline-block;
+vertical-align: middle;
+filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+}
+.msg-meta-right {
+display: flex;
+align-items: center;
+gap: 6px;
+}
+.msg-del-btn {
+display: none;
+background: rgba(239, 68, 68, 0.22);
+border: 1px solid rgba(239, 68, 68, 0.45);
+color: #fca5a5;
+width: 18px;
+height: 18px;
+border-radius: 5px;
+font-size: 12px;
+line-height: 1;
+cursor: pointer;
+align-items: center;
+justify-content: center;
+}
+body.op-mode .msg-del-btn {
+display: inline-flex;
+}
+.modal-backdrop {
+position: fixed;
+inset: 0;
+z-index: 50;
+background: rgba(0, 0, 0, 0.76);
+backdrop-filter: blur(8px);
+display: none;
+align-items: center;
+justify-content: center;
+padding: 16px;
+}
+.modal-backdrop.open {
+display: flex;
+}
+.modal-card {
+width: 100%;
+max-width: 330px;
+background: #0c0c0f;
+border: 1px solid var(--line-strong);
+border-radius: 18px;
+padding: 16px;
+display: flex;
+flex-direction: column;
+gap: 11px;
+}
+</style>
 </head>
 <body>
-  <div class="led-canvas" id="ledCanvas"></div>
-  <div class="led-vignette"></div>
-
-  <div class="modal-backdrop" id="pinModal">
-    <div class="modal-card">
-      <div class="chat-head">
-        <span class="chat-head-title">Operatör Erişimi</span>
-        <button type="button" class="ghost-btn" id="closePinBtn" style="padding: 4px 9px; font-size: 11px;">Kapat</button>
-      </div>
-      <div class="nick-gate-hint">Kontrol konsolunu açmak için operatör PIN kodunu gir.</div>
-      <div class="inline-bar">
-        <input type="password" id="pinInput" placeholder="Operatör PIN" maxlength="12" />
-        <button type="button" class="action-btn" id="confirmPinBtn">Aç</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="modal-backdrop" id="zoneConfirmModal">
-    <div class="modal-card">
-      <div class="chat-head">
-        <span class="chat-head-title">Bölüm Seçimini Onayla</span>
-        <button type="button" class="ghost-btn" id="cancelZoneBtn" style="padding: 4px 9px; font-size: 11px;">Vazgeç</button>
-      </div>
-      <div class="nick-gate-hint" id="zoneWarningText">
-        Seçtiğin bölüm kilitlenecek ve 10 dakika boyunca değiştirilemeyecek. Gerçekten bulunduğun alanı seçtiğinden emin ol.
-      </div>
-      <div class="inline-bar" style="justify-content: flex-end;">
-        <button type="button" class="ghost-btn" id="cancelZoneBtn2">İptal</button>
-        <button type="button" class="action-btn" id="confirmZoneBtn">Onayla ve Kilitle</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="pure-lock-bar">
-    <button type="button" class="hold-exit-btn" id="holdExitBtn">
-      <span class="hold-progress" id="holdProgress"></span>
-      <span class="hold-label" id="holdLabel">Saf LED Kilitli • Çıkmak için basılı tut</span>
-    </button>
-  </div>
-
-  <div class="dock">
-    <button type="button" class="dock-pill" id="pureLedBtn">Saf LED</button>
-    <button type="button" class="chat-trigger" id="chatToggleBtn" aria-label="Sohbet">
-      <span class="badge-dot" id="unreadDot"></span>
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-      </svg>
-    </button>
-  </div>
-
-  <aside class="chat-sheet" id="chatSheet">
-    <div class="chat-head">
-      <div style="display:flex;align-items:center;">
-        <span class="chat-head-title">Chat</span>
-        <span class="chat-scope-tag local-only" id="chatScopeTag">CİHAZ YEREL</span>
-      </div>
-      <button type="button" class="ghost-btn" id="chatCloseBtn" style="padding: 4px 9px; font-size: 11px;">Kapat</button>
-    </div>
-
-    <div class="nick-gate" id="nickGateBox">
-      <div class="nick-gate-hint">Sohbete yazmak için önce kullanıcı adını gir:</div>
-      <div class="inline-bar">
-        <input type="text" id="nickInput" placeholder="Kullanıcı adın (en az 2 karakter)" maxlength="24" />
-        <button type="button" class="action-btn" id="saveNickBtn">Katıl</button>
-      </div>
-    </div>
-
-    <div class="nick-badge-row" id="nickBadgeRow">
-      <span style="display:inline-flex;align-items:center;gap:5px;">
-        Sohbet adı:
-        <span id="nickPreviewBadge" style="display:none;align-items:center;">
-          <svg class="admin-shield-icon" viewBox="0 0 100 108" aria-label="Admin">
-            <path d="M50 2 L95 15 L95 49 C95 77 75 95 50 106 C25 95 5 77 5 49 L5 15 Z" fill="#ef0b0b"/>
-            <g transform="rotate(-42 50 54)" fill="#09090b">
-              <rect x="27" y="29" width="46" height="23" rx="3"/>
-              <rect x="20" y="25" width="6" height="31" rx="3"/>
-              <rect x="74" y="25" width="6" height="31" rx="3"/>
-              <rect x="42" y="54" width="16" height="7" rx="3"/>
-              <rect x="44" y="62" width="12" height="13" rx="2"/>
-              <path d="M44 77 H56 V83 A6 6 0 0 1 44 83 Z"/>
-            </g>
-          </svg>
-        </span>
-        <strong id="activeNickLabel"></strong>
-      </span>
-      <button type="button" class="ghost-btn" id="editNickBtn" style="padding: 3px 8px; font-size: 10.5px;">Değiştir</button>
-    </div>
-
-    <div class="status-notice" id="chatStatusNotice"></div>
-
-    <div class="chat-feed" id="chatFeed">
-      <div class="chat-empty" id="chatEmpty">Sohbet boş • İlk mesajı bırak</div>
-    </div>
-
-    <div class="inline-bar">
-      <input type="text" id="chatInput" placeholder="Önce kullanıcı adını gir..." maxlength="200" disabled />
-      <button type="button" class="action-btn" id="sendChatBtn" disabled>Gönder</button>
-    </div>
-  </aside>
-
-  <main class="viewport" id="viewportRoot">
-    <div class="top-stack">
-      <header class="hud-header">
-        <div class="brand-left">
-          <span class="sync-pulse" id="syncDot"></span>
-          <span>THE NBHD • MARINA '27</span>
-        </div>
-        <div class="header-right">
-          <span class="net-pill" id="netStatusPill">1 kişi</span>
-          <button type="button" class="op-trigger" id="opLockBtn" title="OP Menüyü Aç / Kapat">@onurwiped</button>
-        </div>
-      </header>
-
-      <div class="brightness-tip" id="brightnessTip">
-        <span>Maksimum etki için <strong>telefon parlaklığını sona getirmeyi</strong> unutma.</span>
-        <button type="button" class="tip-close" id="closeBrightnessTip" aria-label="Kapat">×</button>
-      </div>
-
-      <div class="ticker" id="tickerBox">
-        <div class="ticker-label">Operatör Duyurusu • @onurwiped</div>
-        <div class="ticker-text" id="tickerText"></div>
-      </div>
-
-      <div class="torch-banner" id="torchBanner">
-        <div class="torch-title">TELEFON FENERİNİ AÇ</div>
-        <div class="torch-sub">Tüm alan aynı anda arka flaşları yakıyor</div>
-      </div>
-    </div>
-
-    <section class="center-stage">
-      <div class="stage-kicker" id="stageKicker">21 TEMMUZ 2027 • 21:30</div>
-      <div class="stage-name" id="stageName">00g 00s 00d 00sn</div>
-      <div class="stage-sub" id="stageSub">Ataköy Marina Açık Hava Sahnesi</div>
-    </section>
-
-    <div class="stack-bottom">
-      <section class="console">
-        <div>
-          <div class="block-label">
-            <span id="zoneHeaderLabel">Ataköy Marina Bölümünü Seç</span>
-            <span id="wakeStatusLabel">Ekran Açık</span>
-          </div>
-
-          <div class="venue-map" id="venueMapBox">
-            <div class="venue-stage">STAGE • SAHNE</div>
-            <button type="button" class="zone-btn" data-zone="diamond_balcony">Dıamond / Balcony</button>
-            <button type="button" class="zone-btn" data-zone="golden">Golden</button>
-            <button type="button" class="zone-btn" data-zone="silver">Sılver</button>
-          </div>
-
-          <div class="zone-locked-bar" id="zoneLockedBar">
-            <div class="zone-locked-info">
-              <div class="zone-locked-name" id="lockedZoneTitle">DIAMOND / BALCONY</div>
-              <div class="zone-locked-sub" id="lockedZoneSub">Bölüm kilitli</div>
-            </div>
-            <button type="button" class="ghost-btn" id="unlockZoneBtn" style="padding: 6px 10px; font-size: 11px;">Değiştir</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="console operator-only" id="operatorConsole">
-        <div class="block-label" style="margin-bottom: 0;">
-          <span>Operatör Kontrol Paneli</span>
-          <button type="button" class="ghost-btn" id="lockOpBtn" style="padding: 3px 8px; font-size: 10px;">Menüyü Kapat</button>
-        </div>
-
-        <div class="queue-banner" id="queueBanner">
-          <span id="queueBannerText">Auto Offline aktif • Kuyrukta: 0 komut</span>
-          <button type="button" class="ghost-btn" id="btnFlushQueue" style="padding: 3px 8px; font-size: 10px; color: #fcd34d; border-color: rgba(245,158,11,0.45);">Şimdi Gönder</button>
-        </div>
-
-        <div class="op-tabs">
-          <button type="button" class="op-tab-btn active" id="tabBtnControls">Genel Kontrol</button>
-          <button type="button" class="op-tab-btn" id="tabBtnMap">Alan Haritası (Dokunmatik)</button>
-        </div>
-
-        <div class="op-pages-track" id="opPagesTrack">
-          <div class="op-page" id="opPageControls">
-            <div>
-              <div class="block-label">
-                <span>Setlist Sahneleri (20 Şarkı)</span>
-                <span>Yatay Kaydır →</span>
-              </div>
-              <div class="scene-scroller" id="sceneScroller"></div>
-            </div>
-
-            <div>
-              <div class="block-label">Karışık Dağılım Modu (Tribün Konfeti)</div>
-              <div class="inline-bar">
-                <input type="color" id="scatterColorA" value="#ec4899" aria-label="1. Karışık Renk" />
-                <input type="color" id="scatterColorB" value="#ffffff" aria-label="2. Karışık Renk" />
-                <button type="button" class="chip-btn" id="btnScatterStart" style="flex: 1;">Karışık Dağıt (Pembe &amp; Beyaz)</button>
-              </div>
-            </div>
-
-            <div>
-              <div class="block-label">Geri Sayım, Dalga &amp; Moderasyon</div>
-              <div class="mode-grid">
-                <button type="button" class="chip-btn" id="btnCountdownMode">21 Tem 21:30 Sayacı</button>
-                <button type="button" class="chip-btn" id="btnChatFreeze">Sohbeti Kilitle: Açık</button>
-                <button type="button" class="chip-btn" id="btnWaveFB">Dalga: Sahne → Arka</button>
-                <button type="button" class="chip-btn" id="btnWaveBF">Dalga: Arka → Sahne</button>
-                <button type="button" class="chip-btn" id="btnTorchToggle">Fener Uyarısı: Kapalı</button>
-                <button type="button" class="chip-btn" id="btnBlackout">Karartma</button>
-              </div>
-              <div class="inline-bar" style="margin-top: 8px;">
-                <input type="color" id="colorPicker" value="#ff5a1f" aria-label="Özel renk" />
-                <button type="button" class="chip-btn" id="btnCustomColor" style="flex: 1;">Tek Renk Uygula</button>
-              </div>
-            </div>
-
-            <div>
-              <div class="block-label">Genel Duyuru</div>
-              <div class="inline-bar">
-                <input type="text" id="announceInput" placeholder="Tüm ekranlara duyuru gönder..." maxlength="160" />
-                <button type="button" class="action-btn" id="btnAnnounce">Yayınla</button>
-                <button type="button" class="ghost-btn" id="btnClearAnnounce">Sil</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="op-page" id="opPageMap">
-            <div>
-              <div class="block-label">
-                <span>Ataköy Marina Canlı Harita Kontrolü</span>
-                <span id="mapActiveSummary">Kapalı</span>
-              </div>
-
-              <div class="inline-bar" style="margin-bottom: 8px;">
-                <input type="color" id="mapBrushColor" value="#ffffff" aria-label="Bölge Işık Rengi" />
-                <button type="button" class="chip-btn active" id="btnMapTouchMode" style="flex: 1;">Mod: Parmağınla Boya / Sürükle</button>
-                <button type="button" class="ghost-btn" id="btnMapClearAll" style="padding: 8px 10px;">Temizle</button>
-              </div>
-
-              <div class="tactile-arena-wrap" id="tactileArena">
-                <div class="tactile-stage">STAGE</div>
-                <div class="tactile-plan-body">
-                  <div class="tactile-top-row">
-                    <div class="map-pad balcony-pad" data-map-zone="balcony">BALCONY</div>
-                    <div class="map-pad diamond-pad" data-map-zone="diamond">DIAMOND</div>
-                  </div>
-                  <div class="map-pad golden-pad" data-map-zone="golden">GOLDEN</div>
-                  <div class="map-pad silver-pad" data-map-zone="silver">SILVER</div>
-                </div>
-              </div>
-
-              <div class="mode-grid" style="margin-top: 8px;">
-                <button type="button" class="chip-btn" id="btnMapAllOn">Tüm Alanı Yak</button>
-                <button type="button" class="chip-btn" id="btnForceSync">Senkron Yenile</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <script>
-    const FIREBASE_DB_URL = "https://leds-32531-default-rtdb.europe-west1.firebasedatabase.app/";
-    const FIREBASE_CHAT_NODE = "nbhd_marina_2027_global_chat";
-
-    const OPERATOR_PIN = "1305";
-    const CONCERT_TARGET_TS = new Date("2027-07-21T21:30:00+03:00").getTime();
-    const ZONE_COOLDOWN_MS = 10 * 60 * 1000;
-    const CHAT_TIMEOUT_MS = 10 * 1000;
-    const STORAGE_KEY_STATE = "nbhd_marina_cached_state_v14";
-    const STORAGE_KEY_QUEUE = "nbhd_marina_offline_queue_v14";
-    const STORAGE_KEY_CHAT = "nbhd_marina_chat_history_v14";
-    const MAX_STORED_MESSAGES = 200;
-    const tabId = "tab_" + Math.random().toString(36).slice(2, 10);
-
-    const ZONE_LABELS = {
-      diamond_balcony: "Diamond / Balcony",
-      golden: "Golden",
-      silver: "Silver"
-    };
-
-    const SETLIST_SCENES = [
-      { key: "s01", name: "Zombie", sub: "Yeşil ↔ Mor Geçiş", swatch: "#16a34a", mode: "alt", colors: ["#16a34a", "#7e22ce"], interval: 1600 },
-      { key: "s02", name: "Sweater Weather", sub: "Beyaz Sabit", swatch: "#ffffff", mode: "solid", color: "#ffffff" },
-      { key: "s03", name: "Fallen Star", sub: "Kırmızı-Turuncu Nabız", swatch: "#dc2626", mode: "pulse", bg: "linear-gradient(135deg, #dc2626 0%, #f97316 100%)" },
-      { key: "s04", name: "Softcore", sub: "Buz Mavisi ↔ Beyaz", swatch: "#38bdf8", mode: "alt", colors: ["#38bdf8", "#e2e8f0"], interval: 2000 },
-      { key: "s05", name: "Reflections", sub: "Lacivert • Gümüş Nabız", swatch: "#334155", mode: "pulse", bg: "linear-gradient(135deg, #0f172a 0%, #475569 100%)" },
-      { key: "s06", name: "Daddy Issues", sub: "Koyu Mor ↔ Siyah", swatch: "#4c1d95", mode: "alt", colors: ["#4c1d95", "#09090b"], interval: 1500 },
-      { key: "s07", name: "Pretty Boy", sub: "Pembe & Beyaz Karışık", swatch: "#ec4899", mode: "scatter", colorA: "#ec4899", colorB: "#ffffff" },
-      { key: "s08", name: "Devils Advocate", sub: "Kızıl ↔ Siyah", swatch: "#b91c1c", mode: "alt", colors: ["#b91c1c", "#09090b"], interval: 1400 },
-      { key: "s09", name: "Cry Baby", sub: "Kobalt Mavisi Nabız", swatch: "#2563eb", mode: "pulse", bg: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)" },
-      { key: "s10", name: "R.I.P. 2 My Youth", sub: "Siyah • Gümüş Geçiş", swatch: "#71717a", mode: "alt", colors: ["#18181b", "#71717a"], interval: 1700 },
-      { key: "s11", name: "The Beach", sub: "Turkuaz ↔ Kum Sarısı", swatch: "#06b6d4", mode: "alt", colors: ["#06b6d4", "#fde047"], interval: 1900 },
-      { key: "s12", name: "Afraid", sub: "Bordo ↔ Beyaz", swatch: "#881337", mode: "alt", colors: ["#881337", "#f4f4f5"], interval: 1500 },
-      { key: "s13", name: "You Get Me So High", sub: "Mor • Neon Pembe", swatch: "#a855f7", mode: "pulse", bg: "linear-gradient(135deg, #6b21a8 0%, #ec4899 100%)" },
-      { key: "s14", name: "Scary Love", sub: "Neon Pembe ↔ Turkuaz", swatch: "#ec4899", mode: "alt", colors: ["#ec4899", "#06b6d4"], interval: 1600 },
-      { key: "s15", name: "Void", sub: "Derin İndigo Nabız", swatch: "#4338ca", mode: "pulse", bg: "linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%)" },
-      { key: "s16", name: "Nervous", sub: "Kehribar ↔ Turuncu", swatch: "#f59e0b", mode: "alt", colors: ["#f59e0b", "#ea580c"], interval: 1700 },
-      { key: "s17", name: "Stargazing", sub: "Gece Mavisi ↔ Altın", swatch: "#eab308", mode: "alt", colors: ["#0f172a", "#eab308"], interval: 1900 },
-      { key: "s18", name: "Middle of Somewhere", sub: "Zümrüt Yeşili Nabız", swatch: "#10b981", mode: "pulse", bg: "linear-gradient(135deg, #065f46 0%, #10b981 100%)" },
-      { key: "s19", name: "Cherry Flavoured", sub: "Kiraz Kırmızısı Sabit", swatch: "#e11d48", mode: "solid", color: "#e11d48" },
-      { key: "s20", name: "Stuck With Me", sub: "Beyaz • Gümüş Finale", swatch: "#e4e4e7", mode: "pulse", bg: "linear-gradient(135deg, #a1a1aa 0%, #ffffff 100%)" }
-    ];
-
-    const ledCanvas = document.getElementById("ledCanvas");
-    const pureLedBtn = document.getElementById("pureLedBtn");
-    const holdExitBtn = document.getElementById("holdExitBtn");
-    const holdProgress = document.getElementById("holdProgress");
-    const holdLabel = document.getElementById("holdLabel");
-
-    const syncDot = document.getElementById("syncDot");
-    const netStatusPill = document.getElementById("netStatusPill");
-    const queueBanner = document.getElementById("queueBanner");
-    const queueBannerText = document.getElementById("queueBannerText");
-    const btnFlushQueue = document.getElementById("btnFlushQueue");
-
-    const wakeStatusLabel = document.getElementById("wakeStatusLabel");
-    const brightnessTip = document.getElementById("brightnessTip");
-    const closeBrightnessTip = document.getElementById("closeBrightnessTip");
-
-    const opLockBtn = document.getElementById("opLockBtn");
-    const lockOpBtn = document.getElementById("lockOpBtn");
-    const operatorConsole = document.getElementById("operatorConsole");
-    const pinModal = document.getElementById("pinModal");
-    const closePinBtn = document.getElementById("closePinBtn");
-    const pinInput = document.getElementById("pinInput");
-    const confirmPinBtn = document.getElementById("confirmPinBtn");
-
-    const tabBtnControls = document.getElementById("tabBtnControls");
-    const tabBtnMap = document.getElementById("tabBtnMap");
-    const opPagesTrack = document.getElementById("opPagesTrack");
-
-    const tactileArena = document.getElementById("tactileArena");
-    const mapPads = document.querySelectorAll(".map-pad");
-    const mapBrushColor = document.getElementById("mapBrushColor");
-    const btnMapTouchMode = document.getElementById("btnMapTouchMode");
-    const btnMapClearAll = document.getElementById("btnMapClearAll");
-    const btnMapAllOn = document.getElementById("btnMapAllOn");
-    const btnForceSync = document.getElementById("btnForceSync");
-    const mapActiveSummary = document.getElementById("mapActiveSummary");
-
-    const zoneHeaderLabel = document.getElementById("zoneHeaderLabel");
-    const venueMapBox = document.getElementById("venueMapBox");
-    const zoneLockedBar = document.getElementById("zoneLockedBar");
-    const lockedZoneTitle = document.getElementById("lockedZoneTitle");
-    const lockedZoneSub = document.getElementById("lockedZoneSub");
-    const unlockZoneBtn = document.getElementById("unlockZoneBtn");
-
-    const zoneConfirmModal = document.getElementById("zoneConfirmModal");
-    const zoneWarningText = document.getElementById("zoneWarningText");
-    const cancelZoneBtn = document.getElementById("cancelZoneBtn");
-    const cancelZoneBtn2 = document.getElementById("cancelZoneBtn2");
-    const confirmZoneBtn = document.getElementById("confirmZoneBtn");
-
-    const stageKicker = document.getElementById("stageKicker");
-    const stageName = document.getElementById("stageName");
-    const stageSub = document.getElementById("stageSub");
-
-    const zoneButtons = document.querySelectorAll(".zone-btn");
-    const sceneScroller = document.getElementById("sceneScroller");
-    const scatterColorA = document.getElementById("scatterColorA");
-    const scatterColorB = document.getElementById("scatterColorB");
-    const btnScatterStart = document.getElementById("btnScatterStart");
-
-    const btnCountdownMode = document.getElementById("btnCountdownMode");
-    const btnChatFreeze = document.getElementById("btnChatFreeze");
-    const btnWaveFB = document.getElementById("btnWaveFB");
-    const btnWaveBF = document.getElementById("btnWaveBF");
-    const btnTorchToggle = document.getElementById("btnTorchToggle");
-    const btnBlackout = document.getElementById("btnBlackout");
-    const colorPicker = document.getElementById("colorPicker");
-    const btnCustomColor = document.getElementById("btnCustomColor");
-
-    const tickerBox = document.getElementById("tickerBox");
-    const tickerText = document.getElementById("tickerText");
-    const announceInput = document.getElementById("announceInput");
-    const btnAnnounce = document.getElementById("btnAnnounce");
-    const btnClearAnnounce = document.getElementById("btnClearAnnounce");
-    const torchBanner = document.getElementById("torchBanner");
-
-    const chatToggleBtn = document.getElementById("chatToggleBtn");
-    const chatCloseBtn = document.getElementById("chatCloseBtn");
-    const chatSheet = document.getElementById("chatSheet");
-    const chatScopeTag = document.getElementById("chatScopeTag");
-    const unreadDot = document.getElementById("unreadDot");
-
-    const nickGateBox = document.getElementById("nickGateBox");
-    const nickInput = document.getElementById("nickInput");
-    const saveNickBtn = document.getElementById("saveNickBtn");
-    const nickBadgeRow = document.getElementById("nickBadgeRow");
-    const nickPreviewBadge = document.getElementById("nickPreviewBadge");
-    const activeNickLabel = document.getElementById("activeNickLabel");
-    const editNickBtn = document.getElementById("editNickBtn");
-    const chatStatusNotice = document.getElementById("chatStatusNotice");
-
-    const chatFeed = document.getElementById("chatFeed");
-    const chatEmpty = document.getElementById("chatEmpty");
-    const chatInput = document.getElementById("chatInput");
-    const sendChatBtn = document.getElementById("sendChatBtn");
-
-    let effectTimer = null;
-    let countdownTimer = null;
-    let effectStep = 0;
-    let pureLed = false;
-    let chatOpen = false;
-    let torchActive = false;
-    let chatFrozen = false;
-    let currentSceneState = null;
-
-    let mapZonesLit = {
-      balcony: false,
-      diamond: false,
-      golden: false,
-      silver: false
-    };
-    let mapHoldMode = false;
-
-    let selectedZone = localStorage.getItem("nbhd_marina_zone_v14") || "";
-    let zoneLockUntil = Number(localStorage.getItem("nbhd_marina_zone_lock_v14") || "0");
-    let pendingZoneChoice = "";
-
-    let currentNick = (localStorage.getItem("nbhd_nick_v14") || "").trim();
-    let chatTimeoutUntil = Number(localStorage.getItem("nbhd_chat_timeout_v14") || "0");
-    let recentMsgTimestamps = [];
-    let lastSentMessage = "";
-
-    let isOperator = false;
-    let cloudSyncReady = false;
-    let isPullingCloud = false;
-    const peers = new Map();
-    peers.set(tabId, Date.now());
-
-    const channel = ("BroadcastChannel" in window)
-      ? new BroadcastChannel("nbhd_marina_2027_v14")
-      : null;
-
-    const cleanDbBase = FIREBASE_DB_URL.trim().replace(/\/+$/, "");
-    const hasGlobalCloud = cleanDbBase.startsWith("https://");
-
-    function updateChatScopeTag() {
-      if (!chatScopeTag) return;
-      if (hasGlobalCloud) {
-        chatScopeTag.textContent = "LIVE";
-        chatScopeTag.classList.remove("local-only");
-      } else {
-        chatScopeTag.textContent = "CİHAZ YEREL";
-        chatScopeTag.classList.add("local-only");
-      }
-    }
-    updateChatScopeTag();
-
-    function createAdminShieldSvg() {
-      const ns = "http://www.w3.org/2000/svg";
-      const svg = document.createElementNS(ns, "svg");
-      svg.setAttribute("class", "admin-shield-icon");
-      svg.setAttribute("viewBox", "0 0 100 108");
-      svg.setAttribute("aria-label", "Admin");
-
-      const shield = document.createElementNS(ns, "path");
-      shield.setAttribute("d", "M50 2 L95 15 L95 49 C95 77 75 95 50 106 C25 95 5 77 5 49 L5 15 Z");
-      shield.setAttribute("fill", "#ef0b0b");
-      svg.appendChild(shield);
-
-      const g = document.createElementNS(ns, "g");
-      g.setAttribute("transform", "rotate(-42 50 54)");
-      g.setAttribute("fill", "#09090b");
-
-      const head = document.createElementNS(ns, "rect");
-      head.setAttribute("x", "27");
-      head.setAttribute("y", "29");
-      head.setAttribute("width", "46");
-      head.setAttribute("height", "23");
-      head.setAttribute("rx", "3");
-
-      const capL = document.createElementNS(ns, "rect");
-      capL.setAttribute("x", "20");
-      capL.setAttribute("y", "25");
-      capL.setAttribute("width", "6");
-      capL.setAttribute("height", "31");
-      capL.setAttribute("rx", "3");
-
-      const capR = document.createElementNS(ns, "rect");
-      capR.setAttribute("x", "74");
-      capR.setAttribute("y", "25");
-      capR.setAttribute("width", "6");
-      capR.setAttribute("height", "31");
-      capR.setAttribute("rx", "3");
-
-      const collar = document.createElementNS(ns, "rect");
-      collar.setAttribute("x", "42");
-      collar.setAttribute("y", "54");
-      collar.setAttribute("width", "16");
-      collar.setAttribute("height", "7");
-      collar.setAttribute("rx", "3");
-
-      const shaft = document.createElementNS(ns, "rect");
-      shaft.setAttribute("x", "44");
-      shaft.setAttribute("y", "62");
-      shaft.setAttribute("width", "12");
-      shaft.setAttribute("height", "13");
-      shaft.setAttribute("rx", "2");
-
-      const tip = document.createElementNS(ns, "path");
-      tip.setAttribute("d", "M44 77 H56 V83 A6 6 0 0 1 44 83 Z");
-
-      g.appendChild(head);
-      g.appendChild(capL);
-      g.appendChild(capR);
-      g.appendChild(collar);
-      g.appendChild(shaft);
-      g.appendChild(tip);
-      svg.appendChild(g);
-      return svg;
-    }
-
-    let savedChatMessages = [];
-    try {
-      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY_CHAT) || "[]");
-      if (Array.isArray(parsed)) savedChatMessages = parsed;
-    } catch (e) {
-      savedChatMessages = [];
-    }
-
-    function persistChatHistory() {
-      try {
-        localStorage.setItem(STORAGE_KEY_CHAT, JSON.stringify(savedChatMessages.slice(-MAX_STORED_MESSAGES)));
-      } catch (e) {}
-    }
-
-    function normalizeMessageRecord(data) {
-      if (!data || typeof data.text !== "string" || typeof data.author !== "string") return null;
-      const cleanText = data.text.trim().slice(0, 200);
-      const cleanAuthor = data.author.trim().slice(0, 24);
-      if (!cleanText || cleanAuthor.length < 2) return null;
-      return {
-        id: String(data.id || ("m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7))),
-        author: cleanAuthor,
-        text: cleanText,
-        time: String(data.time || ""),
-        ts: Number(data.ts || Date.now()),
-        isAdmin: Boolean(data.isAdmin)
-      };
-    }
-
-    async function cloudSaveMessage(msgRecord) {
-      const clean = normalizeMessageRecord(msgRecord);
-      if (!clean) return false;
-      if (!hasGlobalCloud || !navigator.onLine) {
-        enqueuePacket({ type: "chat", payload: clean });
-        return false;
-      }
-      try {
-        const res = await fetch(`${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(clean.id)}.json`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(clean)
-        });
-        if (!res.ok) {
-          enqueuePacket({ type: "chat", payload: clean });
-          return false;
-        }
-        return true;
-      } catch (e) {
-        enqueuePacket({ type: "chat", payload: clean });
-        return false;
-      }
-    }
-
-    async function cloudDeleteMessage(msgId) {
-      if (!msgId) return false;
-      if (!hasGlobalCloud || !navigator.onLine) {
-        enqueuePacket({ type: "chat_delete", id: msgId });
-        return false;
-      }
-      try {
-        const res = await fetch(`${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(msgId)}.json`, {
-          method: "DELETE"
-        });
-        if (!res.ok) {
-          enqueuePacket({ type: "chat_delete", id: msgId });
-          return false;
-        }
-        return true;
-      } catch (e) {
-        enqueuePacket({ type: "chat_delete", id: msgId });
-        return false;
-      }
-    }
-
-    function renderAllMessagesFromState() {
-      savedChatMessages.sort((a, b) => (a.ts || 0) - (b.ts || 0));
-      savedChatMessages = savedChatMessages.slice(-MAX_STORED_MESSAGES);
-      persistChatHistory();
-
-      Array.from(chatFeed.querySelectorAll(".msg-item")).forEach((node) => node.remove());
-      if (!savedChatMessages.length) {
-        if (chatEmpty) chatEmpty.style.display = "block";
-        return;
-      }
-      if (chatEmpty) chatEmpty.style.display = "none";
-
-      savedChatMessages.forEach((msgRecord) => {
-        const item = document.createElement("div");
-        item.className = "msg-item" + (msgRecord.isAdmin ? " admin-msg" : "");
-        item.dataset.msgId = msgRecord.id;
-
-        const head = document.createElement("div");
-        head.className = "msg-head";
-
-        const authorWrap = document.createElement("span");
-        authorWrap.className = "msg-author-wrap";
-
-        if (msgRecord.isAdmin) {
-          authorWrap.appendChild(createAdminShieldSvg());
-        }
-
-        const authorSpan = document.createElement("span");
-        authorSpan.className = "msg-author-name";
-        authorSpan.textContent = msgRecord.author;
-        authorWrap.appendChild(authorSpan);
-
-        const rightWrap = document.createElement("span");
-        rightWrap.className = "msg-meta-right";
-
-        const timeSpan = document.createElement("span");
-        timeSpan.textContent = msgRecord.time;
-
-        const delBtn = document.createElement("button");
-        delBtn.type = "button";
-        delBtn.className = "msg-del-btn";
-        delBtn.title = "Mesajı sil";
-        delBtn.textContent = "×";
-        delBtn.addEventListener("click", () => {
-          if (!isOperator) return;
-          deleteChatMessage(msgRecord.id, true);
-        });
-
-        rightWrap.appendChild(timeSpan);
-        rightWrap.appendChild(delBtn);
-
-        head.appendChild(authorWrap);
-        head.appendChild(rightWrap);
-
-        const body = document.createElement("div");
-        body.textContent = msgRecord.text;
-
-        item.appendChild(head);
-        item.appendChild(body);
-        chatFeed.appendChild(item);
-      });
-
-      chatFeed.scrollTop = chatFeed.scrollHeight;
-    }
-
-    async function pullGlobalChatHistory(notifyIncoming = false) {
-      if (!hasGlobalCloud || !navigator.onLine || isPullingCloud) return;
-      isPullingCloud = true;
-      try {
-        const res = await fetch(`${cleanDbBase}/${FIREBASE_CHAT_NODE}.json?t=${Date.now()}`, {
-          cache: "no-store"
-        });
-        if (!res.ok) return;
-        const raw = await res.json();
-
-        const previousIds = new Set(savedChatMessages.map((m) => m.id));
-        const cloudList = (!raw || typeof raw !== "object")
-          ? []
-          : Object.entries(raw)
-              .map(([key, item]) => normalizeMessageRecord({ ...(item || {}), id: (item && item.id) || key }))
-              .filter(Boolean)
-              .sort((a, b) => (a.ts || 0) - (b.ts || 0))
-              .slice(-MAX_STORED_MESSAGES);
-
-        const queuedChatIds = new Set(
-          offlineQueue
-            .filter((pkt) => pkt && pkt.type === "chat" && pkt.payload && pkt.payload.id)
-            .map((pkt) => pkt.payload.id)
-        );
-
-        const mergedMap = new Map();
-        cloudList.forEach((m) => mergedMap.set(m.id, m));
-
-        if (cloudSyncReady) {
-          savedChatMessages.forEach((localMsg) => {
-            if (queuedChatIds.has(localMsg.id) && !mergedMap.has(localMsg.id)) {
-              mergedMap.set(localMsg.id, localMsg);
-            }
-          });
-        } else {
-          savedChatMessages.forEach((localMsg) => {
-            if (!mergedMap.has(localMsg.id)) {
-              mergedMap.set(localMsg.id, localMsg);
-            }
-          });
-        }
-
-        const nextMessages = Array.from(mergedMap.values())
-          .sort((a, b) => (a.ts || 0) - (b.ts || 0))
-          .slice(-MAX_STORED_MESSAGES);
-
-        const hasNewMsg = nextMessages.some((m) => !previousIds.has(m.id));
-        const changed =
-          nextMessages.length !== savedChatMessages.length ||
-          nextMessages.some((m, i) => {
-            const prev = savedChatMessages[i];
-            return !prev || prev.id !== m.id || prev.text !== m.text || prev.author !== m.author;
-          });
-
-        savedChatMessages = nextMessages;
-        cloudSyncReady = true;
-
-        if (changed) {
-          renderAllMessagesFromState();
-        } else {
-          persistChatHistory();
-        }
-
-        if (notifyIncoming && hasNewMsg && !chatOpen) {
-          unreadDot.classList.add("visible");
-        }
-      } catch (e) {
-      } finally {
-        isPullingCloud = false;
-      }
-    }
-
-    let isOnline = navigator.onLine;
-    let offlineQueue = [];
-    try {
-      offlineQueue = JSON.parse(localStorage.getItem(STORAGE_KEY_QUEUE) || "[]");
-    } catch (e) {
-      offlineQueue = [];
-    }
-
-    function saveOfflineQueue() {
-      try {
-        localStorage.setItem(STORAGE_KEY_QUEUE, JSON.stringify(offlineQueue.slice(-50)));
-      } catch (e) {}
-      updateNetworkUI();
-    }
-
-    function enqueuePacket(packet) {
-      const exists = offlineQueue.some((item) => {
-        if (packet.type === "chat" && item.type === "chat") {
-          return item.payload && packet.payload && item.payload.id === packet.payload.id;
-        }
-        if (packet.type === "chat_delete" && item.type === "chat_delete") {
-          return item.id === packet.id;
-        }
-        return false;
-      });
-      if (!exists) {
-        offlineQueue.push({ ...packet, queuedAt: Date.now() });
-        saveOfflineQueue();
-      }
-    }
-
-    function updateNetworkUI() {
-      isOnline = navigator.onLine;
-      const qLen = offlineQueue.length;
-      const personCount = peers.size;
-
-      if (isOnline) {
-        syncDot.classList.remove("offline");
-        netStatusPill.classList.remove("offline");
-        netStatusPill.textContent = qLen > 0 ? `${personCount} kişi (${qLen})` : `${personCount} kişi`;
-      } else {
-        syncDot.classList.add("offline");
-        netStatusPill.classList.add("offline");
-        netStatusPill.textContent = "Auto Offline";
-      }
-
-      if (!isOnline || qLen > 0) {
-        queueBanner.classList.add("visible");
-        queueBannerText.textContent = !isOnline
-          ? `Auto Offline aktif • Işıklar yerel çalışıyor • Kuyruk: ${qLen}`
-          : `Bağlantı geldi • Kuyruktaki ${qLen} komut gönderiliyor...`;
-      } else {
-        queueBanner.classList.remove("visible");
-      }
-    }
-
-    function dispatchNetworkPacket(packet) {
-      if (packet.type === "scene") {
-        try {
-          localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(packet.payload));
-        } catch (e) {}
-      }
-
-      if (channel) {
-        try {
-          channel.postMessage(packet);
-        } catch (err) {}
-      }
-
-      if (!navigator.onLine) {
-        enqueuePacket(packet);
-      }
-    }
-
-    async function flushOfflineQueue() {
-      if (!navigator.onLine || offlineQueue.length === 0) {
-        updateNetworkUI();
-        return;
-      }
-      const pending = [...offlineQueue];
-      offlineQueue = [];
-      saveOfflineQueue();
-
-      for (const pkt of pending) {
-        if (pkt.type === "chat" && pkt.payload) {
-          await cloudSaveMessage(pkt.payload);
-        } else if (pkt.type === "chat_delete" && pkt.id) {
-          await cloudDeleteMessage(pkt.id);
-        } else if (channel) {
-          try {
-            channel.postMessage(pkt);
-          } catch (e) {
-            enqueuePacket(pkt);
-          }
-        }
-      }
-      updateNetworkUI();
-      await pullGlobalChatHistory(false);
-    }
-
-    window.addEventListener("online", () => {
-      updateNetworkUI();
-      flushOfflineQueue();
-      pullGlobalChatHistory(true);
-    });
-
-    window.addEventListener("offline", () => {
-      updateNetworkUI();
-    });
-
-    btnFlushQueue.addEventListener("click", flushOfflineQueue);
-    updateNetworkUI();
-
-    function switchOpTab(tabIndex) {
-      const targetX = tabIndex === 1 ? opPagesTrack.clientWidth : 0;
-      opPagesTrack.scrollTo({ left: targetX, behavior: "smooth" });
-      tabBtnControls.classList.toggle("active", tabIndex === 0);
-      tabBtnMap.classList.toggle("active", tabIndex === 1);
-    }
-
-    tabBtnControls.addEventListener("click", () => switchOpTab(0));
-    tabBtnMap.addEventListener("click", () => switchOpTab(1));
-
-    opPagesTrack.addEventListener("scroll", () => {
-      const half = opPagesTrack.clientWidth / 2;
-      const idx = opPagesTrack.scrollLeft > half ? 1 : 0;
-      tabBtnControls.classList.toggle("active", idx === 0);
-      tabBtnMap.classList.toggle("active", idx === 1);
-    });
-
-    btnMapTouchMode.addEventListener("click", () => {
-      mapHoldMode = !mapHoldMode;
-      btnMapTouchMode.textContent = mapHoldMode
-        ? "Mod: Dokun & Kilitle (Kalıcı)"
-        : "Mod: Parmağınla Boya / Sürükle";
-    });
-
-    function broadcastMapZones() {
-      const color = mapBrushColor.value;
-      const litNames = Object.entries(mapZonesLit)
-        .filter(([, v]) => v)
-        .map(([k]) => k.toUpperCase());
-
-      mapPads.forEach((pad) => {
-        const z = pad.dataset.mapZone;
-        const isLit = Boolean(mapZonesLit[z]);
-        pad.classList.toggle("lit", isLit);
-        pad.style.setProperty("--pad-glow", color);
-      });
-
-      mapActiveSummary.textContent = litNames.length ? litNames.join(" + ") : "Kapalı";
-
-      applyScene({
-        key: "",
-        kicker: "CANLI HARİTA KONTROLÜ",
-        name: litNames.length ? litNames.join(" • ") : "Alan Beklemede",
-        sub: litNames.length ? `Aktif Bölge Işığı (${color.toUpperCase()})` : "Haritadan bölgeye dokun",
-        mode: "zone_map",
-        zones: { ...mapZonesLit },
-        color
-      }, true);
-    }
-
-    let isDraggingMap = false;
-    let lastDraggedZone = "";
-
-    function activateZoneUnderPointer(clientX, clientY, isInitialTap) {
-      const el = document.elementFromPoint(clientX, clientY);
-      const pad = el ? el.closest(".map-pad") : null;
-      if (!pad) return;
-      const z = pad.dataset.mapZone;
-      if (!z) return;
-
-      if (mapHoldMode) {
-        if (isInitialTap || z !== lastDraggedZone) {
-          mapZonesLit[z] = !mapZonesLit[z];
-          lastDraggedZone = z;
-          broadcastMapZones();
-        }
-      } else {
-        if (z !== lastDraggedZone) {
-          mapZonesLit = { balcony: false, diamond: false, golden: false, silver: false };
-          mapZonesLit[z] = true;
-          lastDraggedZone = z;
-          broadcastMapZones();
-        }
-      }
-    }
-
-    tactileArena.addEventListener("pointerdown", (e) => {
-      e.preventDefault();
-      isDraggingMap = true;
-      lastDraggedZone = "";
-      activateZoneUnderPointer(e.clientX, e.clientY, true);
-    });
-
-    tactileArena.addEventListener("pointermove", (e) => {
-      if (!isDraggingMap) return;
-      e.preventDefault();
-      activateZoneUnderPointer(e.clientX, e.clientY, false);
-    });
-
-    function endMapDrag() {
-      if (!isDraggingMap) return;
-      isDraggingMap = false;
-      lastDraggedZone = "";
-      if (!mapHoldMode) {
-        mapZonesLit = { balcony: false, diamond: false, golden: false, silver: false };
-        broadcastMapZones();
-      }
-    }
-
-    window.addEventListener("pointerup", endMapDrag);
-    window.addEventListener("pointercancel", endMapDrag);
-
-    btnMapClearAll.addEventListener("click", () => {
-      mapZonesLit = { balcony: false, diamond: false, golden: false, silver: false };
-      broadcastMapZones();
-    });
-
-    btnMapAllOn.addEventListener("click", () => {
-      mapZonesLit = { balcony: true, diamond: true, golden: true, silver: true };
-      broadcastMapZones();
-    });
-
-    btnForceSync.addEventListener("click", () => {
-      if (currentSceneState) {
-        dispatchNetworkPacket({ type: "scene", payload: currentSceneState });
-      }
-      flushOfflineQueue();
-      pullGlobalChatHistory(false);
-    });
-
-    closeBrightnessTip.addEventListener("click", () => {
-      brightnessTip.classList.add("hidden");
-    });
-
-    let wakeLock = null;
-    async function requestWakeLock() {
-      try {
-        if ("wakeLock" in navigator) {
-          wakeLock = await navigator.wakeLock.request("screen");
-          wakeStatusLabel.textContent = "Ekran Kilitlenmez";
-          wakeLock.addEventListener("release", () => {
-            wakeStatusLabel.textContent = "Ekran Açık";
-          });
-        }
-      } catch (err) {
-        wakeStatusLabel.textContent = "Ekran Açık";
-      }
-    }
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") {
-        requestWakeLock();
-        pullGlobalChatHistory(true);
-      }
-    });
-    requestWakeLock();
-
-    let holdAnimFrame = null;
-    let holdStartTime = 0;
-    const HOLD_DURATION_MS = 1500;
-
-    function enterPureLed() {
-      pureLed = true;
-      document.body.classList.add("pure-led");
-      holdProgress.style.width = "0%";
-      holdLabel.textContent = "Saf LED Kilitli • Çıkmak için basılı tut";
-    }
-
-    function exitPureLed() {
-      pureLed = false;
-      document.body.classList.remove("pure-led");
-      cancelHoldExit();
-    }
-
-    function cancelHoldExit() {
-      if (holdAnimFrame) {
-        cancelAnimationFrame(holdAnimFrame);
-        holdAnimFrame = null;
-      }
-      holdProgress.style.width = "0%";
-      holdLabel.textContent = "Saf LED Kilitli • Çıkmak için basılı tut";
-    }
-
-    function startHoldExit(e) {
-      e.preventDefault();
-      holdStartTime = performance.now();
-      holdLabel.textContent = "Açılıyor...";
-
-      const step = (now) => {
-        const elapsed = now - holdStartTime;
-        const pct = Math.min(100, (elapsed / HOLD_DURATION_MS) * 100);
-        holdProgress.style.width = pct + "%";
-        if (pct >= 100) {
-          exitPureLed();
-          return;
-        }
-        holdAnimFrame = requestAnimationFrame(step);
-      };
-      holdAnimFrame = requestAnimationFrame(step);
-    }
-
-    pureLedBtn.addEventListener("click", enterPureLed);
-    holdExitBtn.addEventListener("pointerdown", startHoldExit);
-    holdExitBtn.addEventListener("pointerup", cancelHoldExit);
-    holdExitBtn.addEventListener("pointerleave", cancelHoldExit);
-    holdExitBtn.addEventListener("pointercancel", cancelHoldExit);
-
-    function setOperatorUnlocked(unlocked) {
-      isOperator = unlocked;
-      document.body.classList.toggle("op-mode", unlocked);
-      operatorConsole.classList.toggle("unlocked", unlocked);
-      opLockBtn.classList.toggle("unlocked", unlocked);
-      opLockBtn.textContent = unlocked ? "@onurwiped • OP" : "@onurwiped";
-      if (unlocked) {
-        sessionStorage.setItem("nbhd_op_unlocked_1305", "1");
-      } else {
-        sessionStorage.removeItem("nbhd_op_unlocked_1305");
-      }
-      syncChatLockAndNickUI();
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("op") === OPERATOR_PIN || sessionStorage.getItem("nbhd_op_unlocked_1305") === "1") {
-      setOperatorUnlocked(true);
-    }
-
-    opLockBtn.addEventListener("click", () => {
-      if (isOperator) {
-        setOperatorUnlocked(false);
-        return;
-      }
-      pinModal.classList.add("open");
-      pinInput.value = "";
-      pinInput.focus();
-    });
-
-    closePinBtn.addEventListener("click", () => pinModal.classList.remove("open"));
-    lockOpBtn.addEventListener("click", () => setOperatorUnlocked(false));
-
-    function tryUnlockOperator() {
-      if (pinInput.value.trim() === OPERATOR_PIN) {
-        pinModal.classList.remove("open");
-        setOperatorUnlocked(true);
-      } else {
-        pinInput.value = "";
-        pinInput.placeholder = "Hatalı PIN";
-      }
-    }
-
-    confirmPinBtn.addEventListener("click", tryUnlockOperator);
-    pinInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") tryUnlockOperator();
-    });
-
-    function formatRemaining(ms) {
-      const totalSec = Math.max(0, Math.ceil(ms / 1000));
-      const min = String(Math.floor(totalSec / 60)).padStart(2, "0");
-      const sec = String(totalSec % 60).padStart(2, "0");
-      return `${min}:${sec}`;
-    }
-
-    function updateZoneUI() {
-      const now = Date.now();
-      const remaining = zoneLockUntil - now;
-
-      if (selectedZone && ZONE_LABELS[selectedZone]) {
-        venueMapBox.style.display = "none";
-        zoneLockedBar.classList.add("visible");
-        zoneHeaderLabel.textContent = "Ataköy Marina Bölümün";
-        lockedZoneTitle.textContent = ZONE_LABELS[selectedZone];
-
-        if (remaining > 0) {
-          unlockZoneBtn.disabled = true;
-          unlockZoneBtn.textContent = formatRemaining(remaining);
-          lockedZoneSub.textContent = `Değiştirmek için ${formatRemaining(remaining)} bekle`;
-        } else {
-          unlockZoneBtn.disabled = false;
-          unlockZoneBtn.textContent = "Değiştir";
-          lockedZoneSub.textContent = "Onaylı bölüm";
-        }
-      } else {
-        venueMapBox.style.display = "flex";
-        zoneLockedBar.classList.remove("visible");
-        zoneHeaderLabel.textContent = "Ataköy Marina Bölümünü Seç";
-      }
-    }
-
-    zoneButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const chosen = btn.dataset.zone;
-        if (!ZONE_LABELS[chosen]) return;
-        pendingZoneChoice = chosen;
-        zoneWarningText.innerHTML =
-          `<strong>${ZONE_LABELS[chosen]}</strong> bölümünü seçmek üzeresin. Onayladıktan sonra seçim paneli kapanacak ve <strong>10 dakika</strong> boyunca bölüm değiştiremeyeceksin.`;
-        zoneConfirmModal.classList.add("open");
-      });
-    });
-
-    function closeZoneModal() {
-      pendingZoneChoice = "";
-      zoneConfirmModal.classList.remove("open");
-    }
-
-    cancelZoneBtn.addEventListener("click", closeZoneModal);
-    cancelZoneBtn2.addEventListener("click", closeZoneModal);
-
-    confirmZoneBtn.addEventListener("click", () => {
-      if (!pendingZoneChoice || !ZONE_LABELS[pendingZoneChoice]) return;
-      selectedZone = pendingZoneChoice;
-      zoneLockUntil = Date.now() + ZONE_COOLDOWN_MS;
-      localStorage.setItem("nbhd_marina_zone_v14", selectedZone);
-      localStorage.setItem("nbhd_marina_zone_lock_v14", String(zoneLockUntil));
-      closeZoneModal();
-      updateZoneUI();
-      if (currentSceneState) applyScene(currentSceneState, false);
-    });
-
-    unlockZoneBtn.addEventListener("click", () => {
-      if (Date.now() < zoneLockUntil) return;
-      selectedZone = "";
-      localStorage.removeItem("nbhd_marina_zone_v14");
-      updateZoneUI();
-    });
-
-    function renderSceneCarousel() {
-      sceneScroller.innerHTML = "";
-      SETLIST_SCENES.forEach((scene, idx) => {
-        const num = String(idx + 1).padStart(2, "0");
-        const card = document.createElement("button");
-        card.type = "button";
-        card.className = "scene-card";
-        card.dataset.sceneKey = scene.key;
-        card.innerHTML = `
-          <span class="scene-card-num"><span class="scene-swatch" style="background:${scene.swatch}"></span>#${num}</span>
-          <span class="scene-card-title">${scene.name}</span>
-          <span class="scene-card-sub">${scene.sub}</span>
-        `;
-        card.addEventListener("click", () => {
-          applyScene({
-            key: scene.key,
-            kicker: `SETLIST • ${num}`,
-            name: scene.name,
-            sub: scene.sub,
-            mode: scene.mode,
-            color: scene.color,
-            bg: scene.bg,
-            colors: scene.colors,
-            colorA: scene.colorA,
-            colorB: scene.colorB,
-            interval: scene.interval
-          });
-        });
-        sceneScroller.appendChild(card);
-      });
-    }
-    renderSceneCarousel();
-
-    function resetEffects() {
-      if (effectTimer) {
-        clearInterval(effectTimer);
-        effectTimer = null;
-      }
-      if (countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-      }
-      ledCanvas.classList.remove("soft-pulse");
-      ledCanvas.style.opacity = "1";
-    }
-
-    function setActiveSceneCard(key) {
-      document.querySelectorAll(".scene-card").forEach((c) => {
-        c.classList.toggle("active", c.dataset.sceneKey === key);
-      });
-    }
-
-    function formatConcertCountdown() {
-      const diff = CONCERT_TARGET_TS - Date.now();
-      if (diff <= 0) {
-        return "SAHNE ZAMANI!";
-      }
-      const totalSec = Math.floor(diff / 1000);
-      const days = Math.floor(totalSec / 86400);
-      const hours = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, "0");
-      const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
-      const secs = String(totalSec % 60).padStart(2, "0");
-      return `${days}g ${hours}s ${mins}d ${secs}sn`;
-    }
-
-    function applyScene(state, broadcast = true) {
-      currentSceneState = state;
-      resetEffects();
-      if (state.key !== undefined) setActiveSceneCard(state.key);
-      if (state.kicker) stageKicker.textContent = state.kicker;
-      if (state.name) stageName.textContent = state.name;
-      if (state.sub !== undefined) stageSub.textContent = state.sub;
-
-      if (state.mode === "zone_map" && state.zones) {
-        const userZone = selectedZone || "diamond_balcony";
-        let isUserZoneLit = false;
-        if (userZone === "diamond_balcony") {
-          isUserZoneLit = Boolean(state.zones.diamond || state.zones.balcony);
-        } else {
-          isUserZoneLit = Boolean(state.zones[userZone]);
-        }
-        ledCanvas.style.background = isUserZoneLit ? (state.color || "#ffffff") : "#060608";
-      } else if (state.mode === "countdown") {
-        ledCanvas.style.background = "linear-gradient(160deg, #09090b 0%, #1e1b4b 55%, #09090b 100%)";
-        stageKicker.textContent = "21 TEMMUZ 2027 • 21:30";
-        stageSub.textContent = "Ataköy Marina Açık Hava Sahnesi";
-        const renderCd = () => {
-          stageName.textContent = formatConcertCountdown();
-        };
-        renderCd();
-        countdownTimer = setInterval(renderCd, 1000);
-      } else if (state.mode === "scatter") {
-        const pair = [state.colorA || "#ec4899", state.colorB || "#ffffff"];
-        let idx = Math.random() < 0.5 ? 0 : 1;
-        ledCanvas.style.background = pair[idx];
-        const randomDelay = 900 + Math.floor(Math.random() * 1400);
-        effectTimer = setInterval(() => {
-          if (Math.random() < 0.65) {
-            idx = idx === 0 ? 1 : 0;
-            ledCanvas.style.background = pair[idx];
-          }
-        }, randomDelay);
-      } else if (state.mode === "solid" && state.color) {
-        ledCanvas.style.background = state.color;
-      } else if (state.mode === "pulse" && state.bg) {
-        ledCanvas.style.background = state.bg;
-        ledCanvas.classList.add("soft-pulse");
-      } else if (state.mode === "alt" && Array.isArray(state.colors) && state.colors.length) {
-        effectStep = 0;
-        ledCanvas.style.background = state.colors[0];
-        effectTimer = setInterval(() => {
-          effectStep = (effectStep + 1) % state.colors.length;
-          ledCanvas.style.background = state.colors[effectStep];
-        }, state.interval || 1600);
-      } else if (state.mode === "wave_fb" || state.mode === "wave_bf") {
-        const order = state.mode === "wave_fb"
-          ? ["diamond_balcony", "golden", "silver"]
-          : ["silver", "golden", "diamond_balcony"];
-        const activeUserZone = selectedZone || "diamond_balcony";
-        let tick = 0;
-        const renderWave = () => {
-          const activeZone = order[tick % order.length];
-          ledCanvas.style.background = activeZone === activeUserZone ? "#ffffff" : "#09090b";
-          tick += 1;
-        };
-        renderWave();
-        effectTimer = setInterval(renderWave, 650);
-      } else if (state.mode === "blackout") {
-        ledCanvas.style.background = "#060608";
-      } else if (state.mode === "custom" && state.color) {
-        ledCanvas.style.background = state.color;
-      }
-
-      if (broadcast) {
-        dispatchNetworkPacket({ type: "scene", payload: state });
-      }
-    }
-
-    btnCountdownMode.addEventListener("click", () => {
-      applyScene({
-        key: "",
-        kicker: "21 TEMMUZ 2027 • 21:30",
-        name: formatConcertCountdown(),
-        sub: "Ataköy Marina Açık Hava Sahnesi",
-        mode: "countdown"
-      });
-    });
-
-    btnScatterStart.addEventListener("click", () => {
-      const cA = scatterColorA.value;
-      const cB = scatterColorB.value;
-      applyScene({
-        key: "",
-        kicker: "KARIŞIK DAĞILIM",
-        name: "Tribün Konfeti",
-        sub: `${cA.toUpperCase()} & ${cB.toUpperCase()} Karışık`,
-        mode: "scatter",
-        colorA: cA,
-        colorB: cB
-      });
-    });
-
-    btnWaveFB.addEventListener("click", () => {
-      applyScene({
-        key: "",
-        kicker: "MARINA WAVE",
-        name: "Dalga • Sahne → Arka",
-        sub: "Diamond / Balcony → Golden → Silver",
-        mode: "wave_fb"
-      });
-    });
-
-    btnWaveBF.addEventListener("click", () => {
-      applyScene({
-        key: "",
-        kicker: "MARINA WAVE",
-        name: "Dalga • Arka → Sahne",
-        sub: "Silver → Golden → Diamond / Balcony",
-        mode: "wave_bf"
-      });
-    });
-
-    function setTorchState(active, broadcast = true) {
-      torchActive = active;
-      torchBanner.classList.toggle("visible", torchActive);
-      btnTorchToggle.textContent = torchActive ? "Fener Uyarısı: Açık" : "Fener Uyarısı: Kapalı";
-      btnTorchToggle.classList.toggle("active", torchActive);
-      if (broadcast) {
-        dispatchNetworkPacket({ type: "torch", payload: torchActive });
-      }
-    }
-
-    btnTorchToggle.addEventListener("click", () => setTorchState(!torchActive));
-
-    btnBlackout.addEventListener("click", () => {
-      applyScene({
-        key: "",
-        kicker: "OPERATOR",
-        name: "Karartma",
-        sub: "Siyah Ekran",
-        mode: "blackout"
-      });
-    });
-
-    btnCustomColor.addEventListener("click", () => {
-      const hex = colorPicker.value;
-      applyScene({
-        key: "",
-        kicker: "OPERATOR",
-        name: "Özel Sahne",
-        sub: hex.toUpperCase(),
-        mode: "custom",
-        color: hex
-      });
-    });
-
-    function setTicker(text, broadcast = true) {
-      const clean = (text || "").trim();
-      if (!clean) {
-        tickerText.textContent = "";
-        tickerBox.classList.remove("visible");
-      } else {
-        tickerText.textContent = clean;
-        tickerBox.classList.add("visible");
-      }
-      if (broadcast) {
-        dispatchNetworkPacket({ type: "ticker", payload: clean });
-      }
-    }
-
-    btnAnnounce.addEventListener("click", () => {
-      setTicker(announceInput.value);
-      announceInput.value = "";
-    });
-
-    announceInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        setTicker(announceInput.value);
-        announceInput.value = "";
-      }
-    });
-
-    btnClearAnnounce.addEventListener("click", () => setTicker(""));
-
-    function setChatFrozenState(frozen, broadcast = true) {
-      chatFrozen = Boolean(frozen);
-      btnChatFreeze.textContent = chatFrozen ? "Sohbet: Kilitli" : "Sohbeti Kilitle: Açık";
-      btnChatFreeze.classList.toggle("active", chatFrozen);
-      syncChatLockAndNickUI();
-      if (broadcast) {
-        dispatchNetworkPacket({ type: "chat_freeze", payload: chatFrozen });
-      }
-    }
-
-    btnChatFreeze.addEventListener("click", () => setChatFrozenState(!chatFrozen));
-
-    function syncChatLockAndNickUI() {
-      const hasNick = currentNick.length >= 2;
-      const now = Date.now();
-      const timeoutLeft = !isOperator ? Math.max(0, chatTimeoutUntil - now) : 0;
-
-      if (hasNick) {
-        nickGateBox.style.display = "none";
-        nickBadgeRow.classList.add("visible");
-        nickPreviewBadge.style.display = isOperator ? "inline-flex" : "none";
-        activeNickLabel.textContent = currentNick;
-        activeNickLabel.style.color = isOperator ? "#fca5a5" : "";
-
-        if (chatFrozen && !isOperator) {
-          chatStatusNotice.classList.add("visible");
-          chatStatusNotice.textContent = "Sohbet operatör tarafından kilitlendi";
-          chatInput.disabled = true;
-          sendChatBtn.disabled = true;
-          chatInput.placeholder = "Sohbet şu an kapalı...";
-        } else if (timeoutLeft > 0) {
-          const sec = Math.ceil(timeoutLeft / 1000);
-          chatStatusNotice.classList.add("visible");
-          chatStatusNotice.textContent = `Çok hızlı yazdın • ${sec} sn timeout`;
-          chatInput.disabled = true;
-          sendChatBtn.disabled = true;
-          chatInput.placeholder = `Bekle (${sec} sn)...`;
-        } else {
-          chatStatusNotice.classList.remove("visible");
-          chatInput.disabled = false;
-          sendChatBtn.disabled = false;
-          chatInput.placeholder = isOperator
-            ? `${currentNick} (Admin) olarak yaz...`
-            : `${currentNick} olarak mesaj yaz...`;
-        }
-      } else {
-        nickGateBox.style.display = "flex";
-        nickBadgeRow.classList.remove("visible");
-        if (chatFrozen && !isOperator) {
-          chatStatusNotice.classList.add("visible");
-          chatStatusNotice.textContent = "Sohbet operatör tarafından kilitlendi";
-        } else {
-          chatStatusNotice.classList.remove("visible");
-        }
-        chatInput.disabled = true;
-        sendChatBtn.disabled = true;
-        chatInput.placeholder = "Önce kullanıcı adını gir...";
-      }
-    }
-
-    function confirmNick() {
-      const val = nickInput.value.trim();
-      if (val.length < 2) {
-        nickInput.focus();
-        return;
-      }
-      currentNick = val;
-      localStorage.setItem("nbhd_nick_v14", currentNick);
-      syncChatLockAndNickUI();
-      if (!chatInput.disabled) chatInput.focus();
-    }
-
-    saveNickBtn.addEventListener("click", confirmNick);
-    nickInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") confirmNick();
-    });
-
-    editNickBtn.addEventListener("click", () => {
-      nickInput.value = currentNick;
-      currentNick = "";
-      localStorage.removeItem("nbhd_nick_v14");
-      syncChatLockAndNickUI();
-      nickInput.focus();
-    });
-
-    function toggleChat(open) {
-      chatOpen = open;
-      chatSheet.classList.toggle("open", chatOpen);
-      if (chatOpen) {
-        unreadDot.classList.remove("visible");
-        pullGlobalChatHistory(false);
-        chatFeed.scrollTop = chatFeed.scrollHeight;
-        if (currentNick.length < 2) {
-          nickInput.focus();
-        } else if (!chatInput.disabled) {
-          chatInput.focus();
-        }
-      }
-    }
-
-    chatToggleBtn.addEventListener("click", () => toggleChat(!chatOpen));
-    chatCloseBtn.addEventListener("click", () => toggleChat(false));
-
-    function deleteChatMessage(msgId, broadcast = true) {
-      if (!msgId) return;
-      savedChatMessages = savedChatMessages.filter((m) => m.id !== msgId);
-      renderAllMessagesFromState();
-      cloudDeleteMessage(msgId);
-      if (broadcast) {
-        dispatchNetworkPacket({ type: "chat_delete", id: msgId });
-      }
-    }
-
-    function pushMessage(data, broadcast = true, incoming = false, saveToStorage = true) {
-      const msgRecord = normalizeMessageRecord(data);
-      if (!msgRecord) return;
-
-      const idx = savedChatMessages.findIndex((m) => m.id === msgRecord.id);
-      if (idx === -1) {
-        savedChatMessages.push(msgRecord);
-      } else {
-        savedChatMessages[idx] = msgRecord;
-      }
-
-      renderAllMessagesFromState();
-
-      if (saveToStorage) {
-        cloudSaveMessage(msgRecord);
-      }
-
-      if (incoming && !chatOpen) {
-        unreadDot.classList.add("visible");
-      }
-
-      if (broadcast) {
-        dispatchNetworkPacket({
-          type: "chat",
-          payload: msgRecord
-        });
-      }
-    }
-
-    function restoreChatHistory() {
-      renderAllMessagesFromState();
-    }
-
-    function triggerChatTimeout() {
-      chatTimeoutUntil = Date.now() + CHAT_TIMEOUT_MS;
-      localStorage.setItem("nbhd_chat_timeout_v14", String(chatTimeoutUntil));
-      recentMsgTimestamps = [];
-      syncChatLockAndNickUI();
-    }
-
-    function handleSendChat() {
-      if (currentNick.length < 2) {
-        syncChatLockAndNickUI();
-        nickInput.focus();
-        return;
-      }
-
-      if (chatFrozen && !isOperator) {
-        syncChatLockAndNickUI();
-        return;
-      }
-
-      const now = Date.now();
-      if (!isOperator && now < chatTimeoutUntil) {
-        syncChatLockAndNickUI();
-        return;
-      }
-
-      const text = chatInput.value.trim();
-      if (!text) return;
-
-      if (!isOperator) {
-        recentMsgTimestamps = recentMsgTimestamps.filter((ts) => now - ts < 4000);
-        const isDuplicateFlood =
-          text.toLowerCase() === lastSentMessage.toLowerCase() &&
-          recentMsgTimestamps.length >= 1;
-
-        if (recentMsgTimestamps.length >= 2 || isDuplicateFlood) {
-          chatInput.value = "";
-          triggerChatTimeout();
-          return;
-        }
-        recentMsgTimestamps.push(now);
-        lastSentMessage = text;
-      }
-
-      const d = new Date();
-      const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
-      pushMessage({
-        id: "m_" + now + "_" + Math.random().toString(36).slice(2, 7),
-        author: currentNick,
-        text,
-        time,
-        ts: now,
-        isAdmin: isOperator
-      }, true, false, true);
-      chatInput.value = "";
-    }
-
-    sendChatBtn.addEventListener("click", handleSendChat);
-    chatInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") handleSendChat();
-    });
-
-    function updatePeerCount() {
-      const now = Date.now();
-      peers.set(tabId, now);
-      for (const [id, ts] of peers.entries()) {
-        if (now - ts > 8000) peers.delete(id);
-      }
-      updateNetworkUI();
-    }
-
-    setInterval(() => {
-      updateZoneUI();
-      syncChatLockAndNickUI();
-      updateNetworkUI();
-    }, 1000);
-
-    setInterval(() => {
-      updatePeerCount();
-      if (channel && navigator.onLine) {
-        channel.postMessage({ type: "ping", id: tabId });
-      }
-      if (hasGlobalCloud && navigator.onLine) {
-        pullGlobalChatHistory(true);
-      }
-    }, 3000);
-
-    if (channel) {
-      channel.postMessage({ type: "ping", id: tabId });
-      channel.onmessage = (e) => {
-        const msg = e.data;
-        if (!msg || !msg.type) return;
-        if (msg.type === "ping" && msg.id) {
-          peers.set(msg.id, Date.now());
-          updatePeerCount();
-        }
-        if (msg.type === "scene") applyScene(msg.payload, false);
-        if (msg.type === "ticker") setTicker(msg.payload, false);
-        if (msg.type === "torch") setTorchState(msg.payload, false);
-        if (msg.type === "chat") pushMessage(msg.payload, false, true, false);
-        if (msg.type === "chat_delete") deleteChatMessage(msg.id, false);
-        if (msg.type === "chat_freeze") setChatFrozenState(msg.payload, false);
-      };
-    }
-
-    restoreChatHistory();
-    pullGlobalChatHistory(false);
-    updateZoneUI();
-    syncChatLockAndNickUI();
-
-    let restoredScene = null;
-    try {
-      restoredScene = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE) || "null");
-    } catch (e) {}
-
-    if (restoredScene && restoredScene.mode) {
-      applyScene(restoredScene, false);
-    } else {
-      applyScene({
-        key: "",
-        kicker: "21 TEMMUZ 2027 • 21:30",
-        name: formatConcertCountdown(),
-        sub: "Ataköy Marina Açık Hava Sahnesi",
-        mode: "countdown"
-      }, false);
-    }
-  </script>
+<div class="led-canvas" id="ledCanvas"></div>
+<div class="led-vignette"></div>
+<div class="modal-backdrop" id="pinModal">
+<div class="modal-card">
+<div class="chat-head">
+<span class="chat-head-title">Operatör Erişimi</span>
+<button type="button" class="ghost-btn" id="closePinBtn" style="padding: 4px 9px; font-size: 11px;">Kapat</button>
+</div>
+<div class="nick-gate-hint">Kontrol konsolunu açmak için operatör PIN kodunu gir.</div>
+<div class="inline-bar">
+<input type="password" id="pinInput" placeholder="Operatör PIN" maxlength="12" />
+<button type="button" class="action-btn" id="confirmPinBtn">Aç</button>
+</div>
+</div>
+</div>
+<div class="modal-backdrop" id="zoneConfirmModal">
+<div class="modal-card">
+<div class="chat-head">
+<span class="chat-head-title">Bölüm Seçimini Onayla</span>
+<button type="button" class="ghost-btn" id="cancelZoneBtn" style="padding: 4px 9px; font-size: 11px;">Vazgeç</button>
+</div>
+<div class="nick-gate-hint" id="zoneWarningText">
+Seçtiğin bölüm kilitlenecek ve 10 dakika boyunca değiştirilemeyecek. Gerçekten bulunduğun alanı seçtiğinden emin ol.
+</div>
+<div class="inline-bar" style="justify-content: flex-end;">
+<button type="button" class="ghost-btn" id="cancelZoneBtn2">İptal</button>
+<button type="button" class="action-btn" id="confirmZoneBtn">Onayla ve Kilitle</button>
+</div>
+</div>
+</div>
+<div class="pure-lock-bar">
+<button type="button" class="hold-exit-btn" id="holdExitBtn">
+<span class="hold-progress" id="holdProgress"></span>
+<span class="hold-label" id="holdLabel">Saf LED Kilitli • Çıkmak için basılı tut</span>
+</button>
+</div>
+<div class="dock">
+<button type="button" class="dock-pill" id="pureLedBtn">Saf LED</button>
+<button type="button" class="chat-trigger" id="chatToggleBtn" aria-label="Chat">
+<span class="badge-dot" id="unreadDot"></span>
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+</svg>
+</button>
+</div>
+<aside class="chat-sheet" id="chatSheet">
+<div class="chat-head">
+<div style="display:flex;align-items:center;">
+<span class="chat-head-title">Chat</span>
+<span class="chat-scope-tag local-only" id="chatScopeTag">CİHAZ YEREL</span>
+</div>
+<button type="button" class="ghost-btn" id="chatCloseBtn" style="padding: 4px 9px; font-size: 11px;">Kapat</button>
+</div>
+<div class="nick-gate" id="nickGateBox">
+<div class="nick-gate-hint">Sohbete yazmak için önce kullanıcı adını gir:</div>
+<div class="inline-bar">
+<input type="text" id="nickInput" placeholder="Kullanıcı adın (en az 2 karakter)" maxlength="24" />
+<button type="button" class="action-btn" id="saveNickBtn">Katıl</button>
+</div>
+</div>
+<div class="nick-badge-row" id="nickBadgeRow">
+<span style="display:inline-flex;align-items:center;gap:5px;">
+Sohbet adı:
+<span id="nickPreviewBadge" style="display:none;align-items:center;">
+<svg class="admin-shield-icon" viewBox="0 0 100 108" aria-label="Admin">
+<path d="M50 2 L95 15 L95 49 C95 77 75 95 50 106 C25 95 5 77 5 49 L5 15 Z" fill="#ef0b0b"/>
+<g transform="rotate(-42 50 54)" fill="#09090b">
+<rect x="27" y="29" width="46" height="23" rx="3"/>
+<rect x="20" y="25" width="6" height="31" rx="3"/>
+<rect x="74" y="25" width="6" height="31" rx="3"/>
+<rect x="42" y="54" width="16" height="7" rx="3"/>
+<rect x="44" y="62" width="12" height="13" rx="2"/>
+<path d="M44 77 H56 V83 A6 6 0 0 1 44 83 Z"/>
+</g>
+</svg>
+</span>
+<strong id="activeNickLabel"></strong>
+</span>
+<button type="button" class="ghost-btn" id="editNickBtn" style="padding: 3px 8px; font-size: 10.5px;">Değiştir</button>
+</div>
+<div class="status-notice" id="chatStatusNotice"></div>
+<div class="chat-feed" id="chatFeed">
+<div class="chat-empty" id="chatEmpty">Sohbet boş • İlk mesajı bırak</div>
+</div>
+<div class="inline-bar">
+<input type="text" id="chatInput" placeholder="Önce kullanıcı adını gir..." maxlength="200" disabled />
+<button type="button" class="action-btn" id="sendChatBtn" disabled>Gönder</button>
+</div>
+</aside>
+<main class="viewport" id="viewportRoot">
+<div class="top-stack">
+<header class="hud-header">
+<div class="brand-left">
+<span class="sync-pulse" id="syncDot"></span>
+<span>THE NBHD • MARINA '27</span>
+</div>
+<div class="header-right">
+<span class="net-pill" id="netStatusPill">1 kişi</span>
+<button type="button" class="op-trigger" id="opLockBtn" title="OP Menüyü Aç / Kapat">@onurwiped</button>
+</div>
+</header>
+<div class="brightness-tip" id="brightnessTip">
+<span>Maksimum etki için <strong>telefon parlaklığını sona getirmeyi</strong> unutma.</span>
+<button type="button" class="tip-close" id="closeBrightnessTip" aria-label="Kapat">×</button>
+</div>
+<div class="ticker" id="tickerBox">
+<div class="ticker-label">Operatör Duyurusu • @onurwiped</div>
+<div class="ticker-text" id="tickerText"></div>
+</div>
+<div class="torch-banner" id="torchBanner">
+<div class="torch-title">TELEFON FENERİNİ AÇ</div>
+<div class="torch-sub">Tüm alan aynı anda arka flaşları yakıyor</div>
+</div>
+</div>
+<section class="center-stage">
+<div class="stage-kicker" id="stageKicker">21 TEMMUZ 2027 • 21:30</div>
+<div class="stage-name" id="stageName">00g 00s 00d 00sn</div>
+<div class="stage-sub" id="stageSub">Ataköy Marina Açık Hava Sahnesi</div>
+</section>
+<div class="stack-bottom">
+<section class="console">
+<div>
+<div class="block-label">
+<span id="zoneHeaderLabel">Ataköy Marina Bölümünü Seç</span>
+<span id="wakeStatusLabel">Ekran Açık</span>
+</div>
+<div class="venue-map" id="venueMapBox">
+<div class="venue-stage">STAGE • SAHNE</div>
+<button type="button" class="zone-btn" data-zone="diamond_balcony">Dıamond / Balcony</button>
+<button type="button" class="zone-btn" data-zone="golden">Golden</button>
+<button type="button" class="zone-btn" data-zone="silver">Sılver</button>
+</div>
+<div class="zone-locked-bar" id="zoneLockedBar">
+<div class="zone-locked-info">
+<div class="zone-locked-name" id="lockedZoneTitle">DIAMOND / BALCONY</div>
+<div class="zone-locked-sub" id="lockedZoneSub">Bölüm kilitli</div>
+</div>
+<button type="button" class="ghost-btn" id="unlockZoneBtn" style="padding: 6px 10px; font-size: 11px;">Değiştir</button>
+</div>
+</div>
+</section>
+<section class="console operator-only" id="operatorConsole">
+<div class="block-label" style="margin-bottom: 0;">
+<span>Operatör Kontrol Paneli</span>
+<button type="button" class="ghost-btn" id="lockOpBtn" style="padding: 3px 8px; font-size: 10px;">Menüyü Kapat</button>
+</div>
+<div class="queue-banner" id="queueBanner">
+<span id="queueBannerText">Auto Offline aktif • Kuyrukta: 0 komut</span>
+<button type="button" class="ghost-btn" id="btnFlushQueue" style="padding: 3px 8px; font-size: 10px; color: #fcd34d; border-color: rgba(245,158,11,0.45);">Şimdi Gönder</button>
+</div>
+<div class="op-tabs">
+<button type="button" class="op-tab-btn active" id="tabBtnControls">Genel Kontrol</button>
+<button type="button" class="op-tab-btn" id="tabBtnMap">Alan Haritası (Dokunmatik)</button>
+</div>
+<div class="op-pages-track" id="opPagesTrack">
+<div class="op-page" id="opPageControls">
+<div>
+<div class="block-label">
+<span>Setlist Sahneleri (20 Şarkı)</span>
+<span>Yatay Kaydır →</span>
+</div>
+<div class="scene-scroller" id="sceneScroller"></div>
+</div>
+<div>
+<div class="block-label">Karışık Dağılım Modu (Tribün Konfeti)</div>
+<div class="inline-bar">
+<input type="color" id="scatterColorA" value="#ec4899" aria-label="1. Karışık Renk" />
+<input type="color" id="scatterColorB" value="#ffffff" aria-label="2. Karışık Renk" />
+<button type="button" class="chip-btn" id="btnScatterStart" style="flex: 1;">Karışık Dağıt (Pembe & Beyaz)</button>
+</div>
+</div>
+<div>
+<div class="block-label">Geri Sayım, Dalga & Moderasyon</div>
+<div class="mode-grid">
+<button type="button" class="chip-btn" id="btnCountdownMode">21 Tem 21:30 Sayacı</button>
+<button type="button" class="chip-btn" id="btnChatFreeze">Sohbeti Kilitle: Açık</button>
+<button type="button" class="chip-btn" id="btnWaveFB">Dalga: Sahne → Arka</button>
+<button type="button" class="chip-btn" id="btnWaveBF">Dalga: Arka → Sahne</button>
+<button type="button" class="chip-btn" id="btnTorchToggle">Fener Uyarısı: Kapalı</button>
+<button type="button" class="chip-btn" id="btnBlackout">Karartma</button>
+</div>
+<div class="inline-bar" style="margin-top: 8px;">
+<input type="color" id="colorPicker" value="#ff5a1f" aria-label="Özel renk" />
+<button type="button" class="chip-btn" id="btnCustomColor" style="flex: 1;">Tek Renk Uygula</button>
+</div>
+</div>
+<div>
+<div class="block-label">Genel Duyuru</div>
+<div class="inline-bar">
+<input type="text" id="announceInput" placeholder="Tüm ekranlara duyuru gönder..." maxlength="160" />
+<button type="button" class="action-btn" id="btnAnnounce">Yayınla</button>
+<button type="button" class="ghost-btn" id="btnClearAnnounce">Sil</button>
+</div>
+</div>
+</div>
+<div class="op-page" id="opPageMap">
+<div>
+<div class="block-label">
+<span>Ataköy Marina Canlı Harita Kontrolü</span>
+<span id="mapActiveSummary">Kapalı</span>
+</div>
+<div class="inline-bar" style="margin-bottom: 8px;">
+<input type="color" id="mapBrushColor" value="#ffffff" aria-label="Bölge Işık Rengi" />
+<button type="button" class="chip-btn active" id="btnMapTouchMode" style="flex: 1;">Mod: Parmağınla Boya / Sürükle</button>
+<button type="button" class="ghost-btn" id="btnMapClearAll" style="padding: 8px 10px;">Temizle</button>
+</div>
+<div class="tactile-arena-wrap" id="tactileArena">
+<div class="tactile-stage">STAGE</div>
+<div class="tactile-plan-body">
+<div class="tactile-top-row">
+<div class="map-pad balcony-pad" data-map-zone="balcony">BALCONY</div>
+<div class="map-pad diamond-pad" data-map-zone="diamond">DIAMOND</div>
+</div>
+<div class="map-pad golden-pad" data-map-zone="golden">GOLDEN</div>
+<div class="map-pad silver-pad" data-map-zone="silver">SILVER</div>
+</div>
+</div>
+<div class="mode-grid" style="margin-top: 8px;">
+<button type="button" class="chip-btn" id="btnMapAllOn">Tüm Alanı Yak</button>
+<button type="button" class="chip-btn" id="btnForceSync">Senkron Yenile</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+<script>
+const FIREBASE_DB_URL = "https://leds-32531-default-rtdb.europe-west1.firebasedatabase.app/";
+const FIREBASE_CHAT_NODE = "nbhd_marina_2027_global_chat";
+const FIREBASE_PRESENCE_NODE = "nbhd_marina_2027_presence";
+const MOON_BG_CSS = "url('./bg.jpg') center/cover no-repeat, radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28) 0%, rgba(147,197,253,0.12) 28%, transparent 55%), linear-gradient(180deg, #3c74b8 0%, #4d85c9 48%, #6399d8 100%)";
+const OPERATOR_PIN = "1305";
+const CONCERT_TARGET_TS = new Date("2027-07-21T21:30:00+03:00").getTime();
+const ZONE_COOLDOWN_MS = 10 * 60 * 1000;
+const CHAT_TIMEOUT_MS = 10 * 1000;
+const PRESENCE_TTL_MS = 25 * 1000;
+const STORAGE_KEY_STATE = "nbhd_marina_cached_state_v14";
+const STORAGE_KEY_QUEUE = "nbhd_marina_offline_queue_v14";
+const STORAGE_KEY_CHAT = "nbhd_marina_chat_history_v14";
+const MAX_STORED_MESSAGES = 200;
+function getOrCreateDeviceId() {
+try {
+let id = sessionStorage.getItem("nbhd_device_session_id");
+if (!id) {
+id = "dev_" + Date.now().toString(36) + "" + Math.random().toString(36).slice(2, 8);
+sessionStorage.setItem("nbhd_device_session_id", id);
+}
+return id;
+} catch (e) {
+return "dev" + Math.random().toString(36).slice(2, 10);
+}
+}
+const tabId = getOrCreateDeviceId();
+const ZONE_LABELS = {
+diamond_balcony: "Diamond / Balcony",
+golden: "Golden",
+silver: "Silver"
+};
+const SETLIST_SCENES = [
+{ key: "s01", name: "Zombie", sub: "Yeşil ↔ Mor Geçiş", swatch: "#16a34a", mode: "alt", colors: ["#16a34a", "#7e22ce"], interval: 1600 },
+{ key: "s02", name: "Sweater Weather", sub: "Beyaz Sabit", swatch: "#ffffff", mode: "solid", color: "#ffffff" },
+{ key: "s03", name: "Fallen Star", sub: "Kırmızı-Turuncu Nabız", swatch: "#dc2626", mode: "pulse", bg: "linear-gradient(135deg, #dc2626 0%, #f97316 100%)" },
+{ key: "s04", name: "Softcore", sub: "Buz Mavisi ↔ Beyaz", swatch: "#38bdf8", mode: "alt", colors: ["#38bdf8", "#e2e8f0"], interval: 2000 },
+{ key: "s05", name: "Reflections", sub: "Lacivert • Gümüş Nabız", swatch: "#334155", mode: "pulse", bg: "linear-gradient(135deg, #0f172a 0%, #475569 100%)" },
+{ key: "s06", name: "Daddy Issues", sub: "Koyu Mor ↔ Siyah", swatch: "#4c1d95", mode: "alt", colors: ["#4c1d95", "#09090b"], interval: 1500 },
+{ key: "s07", name: "Pretty Boy", sub: "Pembe & Beyaz Karışık", swatch: "#ec4899", mode: "scatter", colorA: "#ec4899", colorB: "#ffffff" },
+{ key: "s08", name: "Devils Advocate", sub: "Kızıl ↔ Siyah", swatch: "#b91c1c", mode: "alt", colors: ["#b91c1c", "#09090b"], interval: 1400 },
+{ key: "s09", name: "Cry Baby", sub: "Kobalt Mavisi Nabız", swatch: "#2563eb", mode: "pulse", bg: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)" },
+{ key: "s10", name: "R.I.P. 2 My Youth", sub: "Siyah • Gümüş Geçiş", swatch: "#71717a", mode: "alt", colors: ["#18181b", "#71717a"], interval: 1700 },
+{ key: "s11", name: "The Beach", sub: "Turkuaz ↔ Kum Sarısı", swatch: "#06b6d4", mode: "alt", colors: ["#06b6d4", "#fde047"], interval: 1900 },
+{ key: "s12", name: "Afraid", sub: "Bordo ↔ Beyaz", swatch: "#881337", mode: "alt", colors: ["#881337", "#f4f4f5"], interval: 1500 },
+{ key: "s13", name: "You Get Me So High", sub: "Mor • Neon Pembe", swatch: "#a855f7", mode: "pulse", bg: "linear-gradient(135deg, #6b21a8 0%, #ec4899 100%)" },
+{ key: "s14", name: "Scary Love", sub: "Neon Pembe ↔ Turkuaz", swatch: "#ec4899", mode: "alt", colors: ["#ec4899", "#06b6d4"], interval: 1600 },
+{ key: "s15", name: "Void", sub: "Derin İndigo Nabız", swatch: "#4338ca", mode: "pulse", bg: "linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%)" },
+{ key: "s16", name: "Nervous", sub: "Kehribar ↔ Turuncu", swatch: "#f59e0b", mode: "alt", colors: ["#f59e0b", "#ea580c"], interval: 1700 },
+{ key: "s17", name: "Stargazing", sub: "Gece Mavisi ↔ Altın", swatch: "#eab308", mode: "alt", colors: ["#0f172a", "#eab308"], interval: 1900 },
+{ key: "s18", name: "Middle of Somewhere", sub: "Zümrüt Yeşili Nabız", swatch: "#10b981", mode: "pulse", bg: "linear-gradient(135deg, #065f46 0%, #10b981 100%)" },
+{ key: "s19", name: "Cherry Flavoured", sub: "Kiraz Kırmızısı Sabit", swatch: "#e11d48", mode: "solid", color: "#e11d48" },
+{ key: "s20", name: "Stuck With Me", sub: "Beyaz • Gümüş Finale", swatch: "#e4e4e7", mode: "pulse", bg: "linear-gradient(135deg, #a1a1aa 0%, #ffffff 100%)" }
+];
+const ledCanvas = document.getElementById("ledCanvas");
+const pureLedBtn = document.getElementById("pureLedBtn");
+const holdExitBtn = document.getElementById("holdExitBtn");
+const holdProgress = document.getElementById("holdProgress");
+const holdLabel = document.getElementById("holdLabel");
+const syncDot = document.getElementById("syncDot");
+const netStatusPill = document.getElementById("netStatusPill");
+const queueBanner = document.getElementById("queueBanner");
+const queueBannerText = document.getElementById("queueBannerText");
+const btnFlushQueue = document.getElementById("btnFlushQueue");
+const wakeStatusLabel = document.getElementById("wakeStatusLabel");
+const brightnessTip = document.getElementById("brightnessTip");
+const closeBrightnessTip = document.getElementById("closeBrightnessTip");
+const opLockBtn = document.getElementById("opLockBtn");
+const lockOpBtn = document.getElementById("lockOpBtn");
+const operatorConsole = document.getElementById("operatorConsole");
+const pinModal = document.getElementById("pinModal");
+const closePinBtn = document.getElementById("closePinBtn");
+const pinInput = document.getElementById("pinInput");
+const confirmPinBtn = document.getElementById("confirmPinBtn");
+const tabBtnControls = document.getElementById("tabBtnControls");
+const tabBtnMap = document.getElementById("tabBtnMap");
+const opPagesTrack = document.getElementById("opPagesTrack");
+const tactileArena = document.getElementById("tactileArena");
+const mapPads = document.querySelectorAll(".map-pad");
+const mapBrushColor = document.getElementById("mapBrushColor");
+const btnMapTouchMode = document.getElementById("btnMapTouchMode");
+const btnMapClearAll = document.getElementById("btnMapClearAll");
+const btnMapAllOn = document.getElementById("btnMapAllOn");
+const btnForceSync = document.getElementById("btnForceSync");
+const mapActiveSummary = document.getElementById("mapActiveSummary");
+const zoneHeaderLabel = document.getElementById("zoneHeaderLabel");
+const venueMapBox = document.getElementById("venueMapBox");
+const zoneLockedBar = document.getElementById("zoneLockedBar");
+const lockedZoneTitle = document.getElementById("lockedZoneTitle");
+const lockedZoneSub = document.getElementById("lockedZoneSub");
+const unlockZoneBtn = document.getElementById("unlockZoneBtn");
+const zoneConfirmModal = document.getElementById("zoneConfirmModal");
+const zoneWarningText = document.getElementById("zoneWarningText");
+const cancelZoneBtn = document.getElementById("cancelZoneBtn");
+const cancelZoneBtn2 = document.getElementById("cancelZoneBtn2");
+const confirmZoneBtn = document.getElementById("confirmZoneBtn");
+const stageKicker = document.getElementById("stageKicker");
+const stageName = document.getElementById("stageName");
+const stageSub = document.getElementById("stageSub");
+const zoneButtons = document.querySelectorAll(".zone-btn");
+const sceneScroller = document.getElementById("sceneScroller");
+const scatterColorA = document.getElementById("scatterColorA");
+const scatterColorB = document.getElementById("scatterColorB");
+const btnScatterStart = document.getElementById("btnScatterStart");
+const btnCountdownMode = document.getElementById("btnCountdownMode");
+const btnChatFreeze = document.getElementById("btnChatFreeze");
+const btnWaveFB = document.getElementById("btnWaveFB");
+const btnWaveBF = document.getElementById("btnWaveBF");
+const btnTorchToggle = document.getElementById("btnTorchToggle");
+const btnBlackout = document.getElementById("btnBlackout");
+const colorPicker = document.getElementById("colorPicker");
+const btnCustomColor = document.getElementById("btnCustomColor");
+const tickerBox = document.getElementById("tickerBox");
+const tickerText = document.getElementById("tickerText");
+const announceInput = document.getElementById("announceInput");
+const btnAnnounce = document.getElementById("btnAnnounce");
+const btnClearAnnounce = document.getElementById("btnClearAnnounce");
+const torchBanner = document.getElementById("torchBanner");
+const chatToggleBtn = document.getElementById("chatToggleBtn");
+const chatCloseBtn = document.getElementById("chatCloseBtn");
+const chatSheet = document.getElementById("chatSheet");
+const chatScopeTag = document.getElementById("chatScopeTag");
+const unreadDot = document.getElementById("unreadDot");
+const nickGateBox = document.getElementById("nickGateBox");
+const nickInput = document.getElementById("nickInput");
+const saveNickBtn = document.getElementById("saveNickBtn");
+const nickBadgeRow = document.getElementById("nickBadgeRow");
+const nickPreviewBadge = document.getElementById("nickPreviewBadge");
+const activeNickLabel = document.getElementById("activeNickLabel");
+const editNickBtn = document.getElementById("editNickBtn");
+const chatStatusNotice = document.getElementById("chatStatusNotice");
+const chatFeed = document.getElementById("chatFeed");
+const chatEmpty = document.getElementById("chatEmpty");
+const chatInput = document.getElementById("chatInput");
+const sendChatBtn = document.getElementById("sendChatBtn");
+let effectTimer = null;
+let countdownTimer = null;
+let effectStep = 0;
+let pureLed = false;
+let chatOpen = false;
+let torchActive = false;
+let chatFrozen = false;
+let currentSceneState = null;
+let mapZonesLit = {
+balcony: false,
+diamond: false,
+golden: false,
+silver: false
+};
+let mapHoldMode = false;
+let selectedZone = localStorage.getItem("nbhd_marina_zone_v14") || "";
+let zoneLockUntil = Number(localStorage.getItem("nbhd_marina_zone_lock_v14") || "0");
+let pendingZoneChoice = "";
+let currentNick = (localStorage.getItem("nbhd_nick_v14") || "").trim();
+let chatTimeoutUntil = Number(localStorage.getItem("nbhd_chat_timeout_v14") || "0");
+let recentMsgTimestamps = [];
+let lastSentMessage = "";
+let isOperator = false;
+let cloudSyncReady = false;
+let isPullingCloud = false;
+let isSyncingPresence = false;
+let globalOnlineCount = 1;
+const peers = new Map();
+peers.set(tabId, Date.now());
+const channel = ("BroadcastChannel" in window)
+? new BroadcastChannel("nbhd_marina_2027_v14")
+: null;
+const cleanDbBase = FIREBASE_DB_URL.trim().replace(//+$/, "");
+const hasGlobalCloud = cleanDbBase.startsWith("https://");
+function updateChatScopeTag() {
+if (!chatScopeTag) return;
+if (hasGlobalCloud) {
+chatScopeTag.textContent = "Canlı";
+chatScopeTag.classList.remove("local-only");
+} else {
+chatScopeTag.textContent = "CİHAZ YEREL";
+chatScopeTag.classList.add("local-only");
+}
+}
+updateChatScopeTag();
+function fetchWithTimeout(url, options = {}, timeoutMs = 4500) {
+if (typeof AbortController === "undefined") {
+return fetch(url, options);
+}
+const ctrl = new AbortController();
+const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+}
+async function syncGlobalPresence() {
+if (!hasGlobalCloud || !navigator.onLine || isSyncingPresence) return;
+isSyncingPresence = true;
+const now = Date.now();
+try {
+await fetchWithTimeout(
+⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}/${encodeURIComponent(tabId)}.json⁠,
+{
+method: "PUT",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({ ts: now })
+},
+4000
+);
+const res = await fetchWithTimeout(
+⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}.json?t=${now}⁠,
+{ cache: "no-store" },
+4000
+);
+if (!res.ok) return;
+const data = await res.json();
+if (!data || typeof data !== "object") {
+globalOnlineCount = Math.max(1, peers.size);
+updateNetworkUI();
+return;
+}
+let activeDevices = 0;
+for (const [id, val] of Object.entries(data)) {
+const ts = val && typeof val.ts === "number" ? val.ts : 0;
+if (now - ts <= PRESENCE_TTL_MS) {
+activeDevices += 1;
+} else if (now - ts > PRESENCE_TTL_MS * 3) {
+fetch(⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}/${encodeURIComponent(id)}.json⁠, {
+method: "DELETE"
+}).catch(() => {});
+}
+}
+globalOnlineCount = Math.max(1, activeDevices, peers.size);
+updateNetworkUI();
+} catch (e) {
+} finally {
+isSyncingPresence = false;
+}
+}
+function leaveGlobalPresence() {
+if (!hasGlobalCloud) return;
+try {
+fetch(⁠${cleanDbBase}/${FIREBASE_PRESENCE_NODE}/${encodeURIComponent(tabId)}.json⁠, {
+method: "DELETE",
+keepalive: true
+}).catch(() => {});
+} catch (e) {}
+}
+window.addEventListener("pagehide", leaveGlobalPresence);
+window.addEventListener("beforeunload", leaveGlobalPresence);
+function createAdminShieldSvg() {
+const ns = "http://www.w3.org/2000/svg";
+const svg = document.createElementNS(ns, "svg");
+svg.setAttribute("class", "admin-shield-icon");
+svg.setAttribute("viewBox", "0 0 100 108");
+svg.setAttribute("aria-label", "Admin");
+const shield = document.createElementNS(ns, "path");
+shield.setAttribute("d", "M50 2 L95 15 L95 49 C95 77 75 95 50 106 C25 95 5 77 5 49 L5 15 Z");
+shield.setAttribute("fill", "#ef0b0b");
+svg.appendChild(shield);
+const g = document.createElementNS(ns, "g");
+g.setAttribute("transform", "rotate(-42 50 54)");
+g.setAttribute("fill", "#09090b");
+const head = document.createElementNS(ns, "rect");
+head.setAttribute("x", "27");
+head.setAttribute("y", "29");
+head.setAttribute("width", "46");
+head.setAttribute("height", "23");
+head.setAttribute("rx", "3");
+const capL = document.createElementNS(ns, "rect");
+capL.setAttribute("x", "20");
+capL.setAttribute("y", "25");
+capL.setAttribute("width", "6");
+capL.setAttribute("height", "31");
+capL.setAttribute("rx", "3");
+const capR = document.createElementNS(ns, "rect");
+capR.setAttribute("x", "74");
+capR.setAttribute("y", "25");
+capR.setAttribute("width", "6");
+capR.setAttribute("height", "31");
+capR.setAttribute("rx", "3");
+const collar = document.createElementNS(ns, "rect");
+collar.setAttribute("x", "42");
+collar.setAttribute("y", "54");
+collar.setAttribute("width", "16");
+collar.setAttribute("height", "7");
+collar.setAttribute("rx", "3");
+const shaft = document.createElementNS(ns, "rect");
+shaft.setAttribute("x", "44");
+shaft.setAttribute("y", "62");
+shaft.setAttribute("width", "12");
+shaft.setAttribute("height", "13");
+shaft.setAttribute("rx", "2");
+const tip = document.createElementNS(ns, "path");
+tip.setAttribute("d", "M44 77 H56 V83 A6 6 0 0 1 44 83 Z");
+g.appendChild(head);
+g.appendChild(capL);
+g.appendChild(capR);
+g.appendChild(collar);
+g.appendChild(shaft);
+g.appendChild(tip);
+svg.appendChild(g);
+return svg;
+}
+let savedChatMessages = [];
+try {
+const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY_CHAT) || "[]");
+if (Array.isArray(parsed)) savedChatMessages = parsed;
+} catch (e) {
+savedChatMessages = [];
+}
+function persistChatHistory() {
+try {
+localStorage.setItem(STORAGE_KEY_CHAT, JSON.stringify(savedChatMessages.slice(-MAX_STORED_MESSAGES)));
+} catch (e) {}
+}
+function normalizeMessageRecord(data) {
+if (!data || typeof data.text !== "string" || typeof data.author !== "string") return null;
+const cleanText = data.text.trim().slice(0, 200);
+const cleanAuthor = data.author.trim().slice(0, 24);
+if (!cleanText || cleanAuthor.length < 2) return null;
+return {
+id: String(data.id || ("m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7))),
+author: cleanAuthor,
+text: cleanText,
+time: String(data.time || ""),
+ts: Number(data.ts || Date.now()),
+isAdmin: Boolean(data.isAdmin)
+};
+}
+async function cloudSaveMessage(msgRecord) {
+const clean = normalizeMessageRecord(msgRecord);
+if (!clean) return false;
+if (!hasGlobalCloud || !navigator.onLine) {
+enqueuePacket({ type: "chat", payload: clean });
+return false;
+}
+try {
+const res = await fetchWithTimeout(
+⁠${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(clean.id)}.json⁠,
+{
+method: "PUT",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify(clean)
+},
+4500
+);
+if (!res.ok) {
+enqueuePacket({ type: "chat", payload: clean });
+return false;
+}
+return true;
+} catch (e) {
+enqueuePacket({ type: "chat", payload: clean });
+return false;
+}
+}
+async function cloudDeleteMessage(msgId) {
+if (!msgId) return false;
+if (!hasGlobalCloud || !navigator.onLine) {
+enqueuePacket({ type: "chat_delete", id: msgId });
+return false;
+}
+try {
+const res = await fetchWithTimeout(
+⁠${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(msgId)}.json⁠,
+{ method: "DELETE" },
+4500
+);
+if (!res.ok) {
+enqueuePacket({ type: "chat_delete", id: msgId });
+return false;
+}
+return true;
+} catch (e) {
+enqueuePacket({ type: "chat_delete", id: msgId });
+return false;
+}
+}
+function renderAllMessagesFromState() {
+savedChatMessages.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+savedChatMessages = savedChatMessages.slice(-MAX_STORED_MESSAGES);
+persistChatHistory();
+Array.from(chatFeed.querySelectorAll(".msg-item")).forEach((node) => node.remove());
+if (!savedChatMessages.length) {
+if (chatEmpty) chatEmpty.style.display = "block";
+return;
+}
+if (chatEmpty) chatEmpty.style.display = "none";
+savedChatMessages.forEach((msgRecord) => {
+const item = document.createElement("div");
+item.className = "msg-item" + (msgRecord.isAdmin ? " admin-msg" : "");
+item.dataset.msgId = msgRecord.id;
+const head = document.createElement("div");
+head.className = "msg-head";
+const authorWrap = document.createElement("span");
+authorWrap.className = "msg-author-wrap";
+if (msgRecord.isAdmin) {
+authorWrap.appendChild(createAdminShieldSvg());
+}
+const authorSpan = document.createElement("span");
+authorSpan.className = "msg-author-name";
+authorSpan.textContent = msgRecord.author;
+authorWrap.appendChild(authorSpan);
+const rightWrap = document.createElement("span");
+rightWrap.className = "msg-meta-right";
+const timeSpan = document.createElement("span");
+timeSpan.textContent = msgRecord.time;
+const delBtn = document.createElement("button");
+delBtn.type = "button";
+delBtn.className = "msg-del-btn";
+delBtn.title = "Mesajı sil";
+delBtn.textContent = "×";
+delBtn.addEventListener("click", () => {
+if (!isOperator) return;
+deleteChatMessage(msgRecord.id, true);
+});
+rightWrap.appendChild(timeSpan);
+rightWrap.appendChild(delBtn);
+head.appendChild(authorWrap);
+head.appendChild(rightWrap);
+const body = document.createElement("div");
+body.textContent = msgRecord.text;
+item.appendChild(head);
+item.appendChild(body);
+chatFeed.appendChild(item);
+});
+chatFeed.scrollTop = chatFeed.scrollHeight;
+}
+async function pullGlobalChatHistory(notifyIncoming = false) {
+if (!hasGlobalCloud || !navigator.onLine || isPullingCloud) return;
+isPullingCloud = true;
+try {
+const res = await fetchWithTimeout(
+⁠${cleanDbBase}/${FIREBASE_CHAT_NODE}.json?t=${Date.now()}⁠,
+{ cache: "no-store" },
+4500
+);
+if (!res.ok) return;
+const raw = await res.json();
+const previousIds = new Set(savedChatMessages.map((m) => m.id));
+const cloudList = (!raw || typeof raw !== "object")
+? []
+: Object.entries(raw)
+.map(([key, item]) => normalizeMessageRecord({ ...(item || {}), id: (item && item.id) || key }))
+.filter(Boolean)
+.sort((a, b) => (a.ts || 0) - (b.ts || 0))
+.slice(-MAX_STORED_MESSAGES);
+const queuedChatIds = new Set(
+offlineQueue
+.filter((pkt) => pkt && pkt.type === "chat" && pkt.payload && pkt.payload.id)
+.map((pkt) => pkt.payload.id)
+);
+const mergedMap = new Map();
+cloudList.forEach((m) => mergedMap.set(m.id, m));
+if (cloudSyncReady) {
+savedChatMessages.forEach((localMsg) => {
+if (queuedChatIds.has(localMsg.id) && !mergedMap.has(localMsg.id)) {
+mergedMap.set(localMsg.id, localMsg);
+}
+});
+} else {
+savedChatMessages.forEach((localMsg) => {
+if (!mergedMap.has(localMsg.id)) {
+mergedMap.set(localMsg.id, localMsg);
+}
+});
+}
+const nextMessages = Array.from(mergedMap.values())
+.sort((a, b) => (a.ts || 0) - (b.ts || 0))
+.slice(-MAX_STORED_MESSAGES);
+const hasNewMsg = nextMessages.some((m) => !previousIds.has(m.id));
+const changed =
+nextMessages.length !== savedChatMessages.length ||
+nextMessages.some((m, i) => {
+const prev = savedChatMessages[i];
+return !prev || prev.id !== m.id || prev.text !== m.text || prev.author !== m.author;
+});
+savedChatMessages = nextMessages;
+cloudSyncReady = true;
+if (changed) {
+renderAllMessagesFromState();
+} else {
+persistChatHistory();
+}
+if (notifyIncoming && hasNewMsg && !chatOpen) {
+unreadDot.classList.add("visible");
+}
+} catch (e) {
+} finally {
+isPullingCloud = false;
+}
+}
+let isOnline = navigator.onLine;
+let offlineQueue = [];
+try {
+offlineQueue = JSON.parse(localStorage.getItem(STORAGE_KEY_QUEUE) || "[]");
+} catch (e) {
+offlineQueue = [];
+}
+function saveOfflineQueue() {
+try {
+localStorage.setItem(STORAGE_KEY_QUEUE, JSON.stringify(offlineQueue.slice(-50)));
+} catch (e) {}
+updateNetworkUI();
+}
+function enqueuePacket(packet) {
+const exists = offlineQueue.some((item) => {
+if (packet.type === "chat" && item.type === "chat") {
+return item.payload && packet.payload && item.payload.id === packet.payload.id;
+}
+if (packet.type === "chat_delete" && item.type === "chat_delete") {
+return item.id === packet.id;
+}
+return false;
+});
+if (!exists) {
+offlineQueue.push({ ...packet, queuedAt: Date.now() });
+saveOfflineQueue();
+}
+}
+function updateNetworkUI() {
+isOnline = navigator.onLine;
+const qLen = offlineQueue.length;
+const personCount = hasGlobalCloud ? Math.max(globalOnlineCount, peers.size) : peers.size;
+if (isOnline) {
+syncDot.classList.remove("offline");
+netStatusPill.classList.remove("offline");
+netStatusPill.textContent = qLen > 0 ? ⁠${personCount} kişi (${qLen})⁠ : ⁠${personCount} kişi⁠;
+} else {
+syncDot.classList.add("offline");
+netStatusPill.classList.add("offline");
+netStatusPill.textContent = "Auto Offline";
+}
+if (!isOnline || qLen > 0) {
+queueBanner.classList.add("visible");
+queueBannerText.textContent = !isOnline
+? ⁠Auto Offline aktif • Işıklar yerel çalışıyor • Kuyruk: ${qLen}⁠
+: ⁠Bağlantı geldi • Kuyruktaki ${qLen} komut gönderiliyor...⁠;
+} else {
+queueBanner.classList.remove("visible");
+}
+}
+function dispatchNetworkPacket(packet) {
+if (packet.type === "scene") {
+try {
+localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(packet.payload));
+} catch (e) {}
+}
+if (channel) {
+try {
+channel.postMessage(packet);
+} catch (err) {}
+}
+if (!navigator.onLine) {
+enqueuePacket(packet);
+}
+}
+async function flushOfflineQueue() {
+if (!navigator.onLine || offlineQueue.length === 0) {
+updateNetworkUI();
+return;
+}
+const pending = [...offlineQueue];
+offlineQueue = [];
+saveOfflineQueue();
+for (const pkt of pending) {
+if (pkt.type === "chat" && pkt.payload) {
+await cloudSaveMessage(pkt.payload);
+} else if (pkt.type === "chat_delete" && pkt.id) {
+await cloudDeleteMessage(pkt.id);
+} else if (channel) {
+try {
+channel.postMessage(pkt);
+} catch (e) {
+enqueuePacket(pkt);
+}
+}
+}
+updateNetworkUI();
+await pullGlobalChatHistory(false);
+}
+window.addEventListener("online", () => {
+updateNetworkUI();
+flushOfflineQueue();
+pullGlobalChatHistory(true);
+syncGlobalPresence();
+});
+window.addEventListener("offline", () => {
+updateNetworkUI();
+});
+btnFlushQueue.addEventListener("click", flushOfflineQueue);
+updateNetworkUI();
+function switchOpTab(tabIndex) {
+const targetX = tabIndex === 1 ? opPagesTrack.clientWidth : 0;
+opPagesTrack.scrollTo({ left: targetX, behavior: "smooth" });
+tabBtnControls.classList.toggle("active", tabIndex === 0);
+tabBtnMap.classList.toggle("active", tabIndex === 1);
+}
+tabBtnControls.addEventListener("click", () => switchOpTab(0));
+tabBtnMap.addEventListener("click", () => switchOpTab(1));
+opPagesTrack.addEventListener("scroll", () => {
+const half = opPagesTrack.clientWidth / 2;
+const idx = opPagesTrack.scrollLeft > half ? 1 : 0;
+tabBtnControls.classList.toggle("active", idx === 0);
+tabBtnMap.classList.toggle("active", idx === 1);
+});
+btnMapTouchMode.addEventListener("click", () => {
+mapHoldMode = !mapHoldMode;
+btnMapTouchMode.textContent = mapHoldMode
+? "Mod: Dokun & Kilitle (Kalıcı)"
+: "Mod: Parmağınla Boya / Sürükle";
+});
+function broadcastMapZones() {
+const color = mapBrushColor.value;
+const litNames = Object.entries(mapZonesLit)
+.filter(([, v]) => v)
+.map(([k]) => k.toUpperCase());
+mapPads.forEach((pad) => {
+const z = pad.dataset.mapZone;
+const isLit = Boolean(mapZonesLit[z]);
+pad.classList.toggle("lit", isLit);
+pad.style.setProperty("--pad-glow", color);
+});
+mapActiveSummary.textContent = litNames.length ? litNames.join(" + ") : "Kapalı";
+applyScene({
+key: "",
+kicker: "CANLI HARİTA KONTROLÜ",
+name: litNames.length ? litNames.join(" • ") : "Alan Beklemede",
+sub: litNames.length ? ⁠Aktif Bölge Işığı (${color.toUpperCase()})⁠ : "Haritadan bölgeye dokun",
+mode: "zone_map",
+zones: { ...mapZonesLit },
+color
+}, true);
+}
+let isDraggingMap = false;
+let lastDraggedZone = "";
+function activateZoneUnderPointer(clientX, clientY, isInitialTap) {
+const el = document.elementFromPoint(clientX, clientY);
+const pad = el ? el.closest(".map-pad") : null;
+if (!pad) return;
+const z = pad.dataset.mapZone;
+if (!z) return;
+if (mapHoldMode) {
+if (isInitialTap || z !== lastDraggedZone) {
+mapZonesLit[z] = !mapZonesLit[z];
+lastDraggedZone = z;
+broadcastMapZones();
+}
+} else {
+if (z !== lastDraggedZone) {
+mapZonesLit = { balcony: false, diamond: false, golden: false, silver: false };
+mapZonesLit[z] = true;
+lastDraggedZone = z;
+broadcastMapZones();
+}
+}
+}
+tactileArena.addEventListener("pointerdown", (e) => {
+e.preventDefault();
+isDraggingMap = true;
+lastDraggedZone = "";
+activateZoneUnderPointer(e.clientX, e.clientY, true);
+});
+tactileArena.addEventListener("pointermove", (e) => {
+if (!isDraggingMap) return;
+e.preventDefault();
+activateZoneUnderPointer(e.clientX, e.clientY, false);
+});
+function endMapDrag() {
+if (!isDraggingMap) return;
+isDraggingMap = false;
+lastDraggedZone = "";
+if (!mapHoldMode) {
+mapZonesLit = { balcony: false, diamond: false, golden: false, silver: false };
+broadcastMapZones();
+}
+}
+window.addEventListener("pointerup", endMapDrag);
+window.addEventListener("pointercancel", endMapDrag);
+btnMapClearAll.addEventListener("click", () => {
+mapZonesLit = { balcony: false, diamond: false, golden: false, silver: false };
+broadcastMapZones();
+});
+btnMapAllOn.addEventListener("click", () => {
+mapZonesLit = { balcony: true, diamond: true, golden: true, silver: true };
+broadcastMapZones();
+});
+btnForceSync.addEventListener("click", () => {
+if (currentSceneState) {
+dispatchNetworkPacket({ type: "scene", payload: currentSceneState });
+}
+flushOfflineQueue();
+pullGlobalChatHistory(false);
+syncGlobalPresence();
+});
+closeBrightnessTip.addEventListener("click", () => {
+brightnessTip.classList.add("hidden");
+});
+let wakeLock = null;
+async function requestWakeLock() {
+try {
+if ("wakeLock" in navigator) {
+wakeLock = await navigator.wakeLock.request("screen");
+wakeStatusLabel.textContent = "Ekran Kilitlenmez";
+wakeLock.addEventListener("release", () => {
+wakeStatusLabel.textContent = "Ekran Açık";
+});
+}
+} catch (err) {
+wakeStatusLabel.textContent = "Ekran Açık";
+}
+}
+document.addEventListener("visibilitychange", () => {
+if (document.visibilityState === "visible") {
+requestWakeLock();
+pullGlobalChatHistory(true);
+syncGlobalPresence();
+}
+});
+requestWakeLock();
+let holdAnimFrame = null;
+let holdStartTime = 0;
+const HOLD_DURATION_MS = 1500;
+function enterPureLed() {
+pureLed = true;
+document.body.classList.add("pure-led");
+holdProgress.style.width = "0%";
+holdLabel.textContent = "Saf LED Kilitli • Çıkmak için basılı tut";
+}
+function exitPureLed() {
+pureLed = false;
+document.body.classList.remove("pure-led");
+cancelHoldExit();
+}
+function cancelHoldExit() {
+if (holdAnimFrame) {
+cancelAnimationFrame(holdAnimFrame);
+holdAnimFrame = null;
+}
+holdProgress.style.width = "0%";
+holdLabel.textContent = "Saf LED Kilitli • Çıkmak için basılı tut";
+}
+function startHoldExit(e) {
+e.preventDefault();
+holdStartTime = performance.now();
+holdLabel.textContent = "Açılıyor...";
+const step = (now) => {
+const elapsed = now - holdStartTime;
+const pct = Math.min(100, (elapsed / HOLD_DURATION_MS) * 100);
+holdProgress.style.width = pct + "%";
+if (pct >= 100) {
+exitPureLed();
+return;
+}
+holdAnimFrame = requestAnimationFrame(step);
+};
+holdAnimFrame = requestAnimationFrame(step);
+}
+pureLedBtn.addEventListener("click", enterPureLed);
+holdExitBtn.addEventListener("pointerdown", startHoldExit);
+holdExitBtn.addEventListener("pointerup", cancelHoldExit);
+holdExitBtn.addEventListener("pointerleave", cancelHoldExit);
+holdExitBtn.addEventListener("pointercancel", cancelHoldExit);
+function setOperatorUnlocked(unlocked) {
+isOperator = unlocked;
+document.body.classList.toggle("op-mode", unlocked);
+operatorConsole.classList.toggle("unlocked", unlocked);
+opLockBtn.classList.toggle("unlocked", unlocked);
+opLockBtn.textContent = unlocked ? "@onurwiped • OP" : "@onurwiped";
+if (unlocked) {
+sessionStorage.setItem("nbhd_op_unlocked_1305", "1");
+} else {
+sessionStorage.removeItem("nbhd_op_unlocked_1305");
+}
+syncChatLockAndNickUI();
+}
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("op") === OPERATOR_PIN || sessionStorage.getItem("nbhd_op_unlocked_1305") === "1") {
+setOperatorUnlocked(true);
+}
+opLockBtn.addEventListener("click", () => {
+if (isOperator) {
+setOperatorUnlocked(false);
+return;
+}
+pinModal.classList.add("open");
+pinInput.value = "";
+pinInput.focus();
+});
+closePinBtn.addEventListener("click", () => pinModal.classList.remove("open"));
+lockOpBtn.addEventListener("click", () => setOperatorUnlocked(false));
+function tryUnlockOperator() {
+if (pinInput.value.trim() === OPERATOR_PIN) {
+pinModal.classList.remove("open");
+setOperatorUnlocked(true);
+} else {
+pinInput.value = "";
+pinInput.placeholder = "Hatalı PIN";
+}
+}
+confirmPinBtn.addEventListener("click", tryUnlockOperator);
+pinInput.addEventListener("keydown", (e) => {
+if (e.key === "Enter") tryUnlockOperator();
+});
+function formatRemaining(ms) {
+const totalSec = Math.max(0, Math.ceil(ms / 1000));
+const min = String(Math.floor(totalSec / 60)).padStart(2, "0");
+const sec = String(totalSec % 60).padStart(2, "0");
+return ⁠${min}:${sec}⁠;
+}
+function updateZoneUI() {
+const now = Date.now();
+const remaining = zoneLockUntil - now;
+if (selectedZone && ZONE_LABELS[selectedZone]) {
+venueMapBox.style.display = "none";
+zoneLockedBar.classList.add("visible");
+zoneHeaderLabel.textContent = "Ataköy Marina Bölümün";
+lockedZoneTitle.textContent = ZONE_LABELS[selectedZone];
+if (remaining > 0) {
+unlockZoneBtn.disabled = true;
+unlockZoneBtn.textContent = formatRemaining(remaining);
+lockedZoneSub.textContent = ⁠Değiştirmek için ${formatRemaining(remaining)} bekle⁠;
+} else {
+unlockZoneBtn.disabled = false;
+unlockZoneBtn.textContent = "Değiştir";
+lockedZoneSub.textContent = "Onaylı bölüm";
+}
+} else {
+venueMapBox.style.display = "flex";
+zoneLockedBar.classList.remove("visible");
+zoneHeaderLabel.textContent = "Ataköy Marina Bölümünü Seç";
+}
+}
+zoneButtons.forEach((btn) => {
+btn.addEventListener("click", () => {
+const chosen = btn.dataset.zone;
+if (!ZONE_LABELS[chosen]) return;
+pendingZoneChoice = chosen;
+zoneWarningText.innerHTML =
+⁠<strong>${ZONE_LABELS[chosen]}</strong> bölümünü seçmek üzeresin. Onayladıktan sonra seçim paneli kapanacak ve <strong>10 dakika</strong> boyunca bölüm değiştiremeyeceksin.⁠;
+zoneConfirmModal.classList.add("open");
+});
+});
+function closeZoneModal() {
+pendingZoneChoice = "";
+zoneConfirmModal.classList.remove("open");
+}
+cancelZoneBtn.addEventListener("click", closeZoneModal);
+cancelZoneBtn2.addEventListener("click", closeZoneModal);
+confirmZoneBtn.addEventListener("click", () => {
+if (!pendingZoneChoice || !ZONE_LABELS[pendingZoneChoice]) return;
+selectedZone = pendingZoneChoice;
+zoneLockUntil = Date.now() + ZONE_COOLDOWN_MS;
+localStorage.setItem("nbhd_marina_zone_v14", selectedZone);
+localStorage.setItem("nbhd_marina_zone_lock_v14", String(zoneLockUntil));
+closeZoneModal();
+updateZoneUI();
+if (currentSceneState) applyScene(currentSceneState, false);
+});
+unlockZoneBtn.addEventListener("click", () => {
+if (Date.now() < zoneLockUntil) return;
+selectedZone = "";
+localStorage.removeItem("nbhd_marina_zone_v14");
+updateZoneUI();
+});
+function renderSceneCarousel() {
+sceneScroller.innerHTML = "";
+SETLIST_SCENES.forEach((scene, idx) => {
+const num = String(idx + 1).padStart(2, "0");
+const card = document.createElement("button");
+card.type = "button";
+card.className = "scene-card";
+card.dataset.sceneKey = scene.key;
+card.innerHTML = ⁠<span class="scene-card-num"><span class="scene-swatch" style="background:${scene.swatch}"></span>#${num}</span> <span class="scene-card-title">${scene.name}</span> <span class="scene-card-sub">${scene.sub}</span>⁠;
+card.addEventListener("click", () => {
+applyScene({
+key: scene.key,
+kicker: ⁠SETLIST • ${num}⁠,
+name: scene.name,
+sub: scene.sub,
+mode: scene.mode,
+color: scene.color,
+bg: scene.bg,
+colors: scene.colors,
+colorA: scene.colorA,
+colorB: scene.colorB,
+interval: scene.interval
+});
+});
+sceneScroller.appendChild(card);
+});
+}
+renderSceneCarousel();
+function resetEffects() {
+if (effectTimer) {
+clearInterval(effectTimer);
+effectTimer = null;
+}
+if (countdownTimer) {
+clearInterval(countdownTimer);
+countdownTimer = null;
+}
+ledCanvas.classList.remove("soft-pulse");
+ledCanvas.style.opacity = "1";
+}
+function setActiveSceneCard(key) {
+document.querySelectorAll(".scene-card").forEach((c) => {
+c.classList.toggle("active", c.dataset.sceneKey === key);
+});
+}
+function formatConcertCountdown() {
+const diff = CONCERT_TARGET_TS - Date.now();
+if (diff <= 0) {
+return "SAHNE ZAMANI!";
+}
+const totalSec = Math.floor(diff / 1000);
+const days = Math.floor(totalSec / 86400);
+const hours = String(Math.floor((totalSec % 86400) / 3600)).padStart(2, "0");
+const mins = String(Math.floor((totalSec % 3600) / 60)).padStart(2, "0");
+const secs = String(totalSec % 60).padStart(2, "0");
+return ⁠${days}g ${hours}s ${mins}d ${secs}sn⁠;
+}
+function applyScene(state, broadcast = true) {
+currentSceneState = state;
+resetEffects();
+if (state.key !== undefined) setActiveSceneCard(state.key);
+if (state.kicker) stageKicker.textContent = state.kicker;
+if (state.name) stageName.textContent = state.name;
+if (state.sub !== undefined) stageSub.textContent = state.sub;
+if (state.mode === "zone_map" && state.zones) {
+const userZone = selectedZone || "diamond_balcony";
+let isUserZoneLit = false;
+if (userZone === "diamond_balcony") {
+isUserZoneLit = Boolean(state.zones.diamond || state.zones.balcony);
+} else {
+isUserZoneLit = Boolean(state.zones[userZone]);
+}
+ledCanvas.style.background = isUserZoneLit ? (state.color || "#ffffff") : "#060608";
+} else if (state.mode === "countdown") {
+ledCanvas.style.background = MOON_BG_CSS;
+stageKicker.textContent = "21 TEMMUZ 2027 • 21:30";
+stageSub.textContent = "Ataköy Marina Açık Hava Sahnesi";
+const renderCd = () => {
+stageName.textContent = formatConcertCountdown();
+};
+renderCd();
+countdownTimer = setInterval(renderCd, 1000);
+} else if (state.mode === "scatter") {
+const pair = [state.colorA || "#ec4899", state.colorB || "#ffffff"];
+let idx = Math.random() < 0.5 ? 0 : 1;
+ledCanvas.style.background = pair[idx];
+const randomDelay = 900 + Math.floor(Math.random() * 1400);
+effectTimer = setInterval(() => {
+if (Math.random() < 0.65) {
+idx = idx === 0 ? 1 : 0;
+ledCanvas.style.background = pair[idx];
+}
+}, randomDelay);
+} else if (state.mode === "solid" && state.color) {
+ledCanvas.style.background = state.color;
+} else if (state.mode === "pulse" && state.bg) {
+ledCanvas.style.background = state.bg;
+ledCanvas.classList.add("soft-pulse");
+} else if (state.mode === "alt" && Array.isArray(state.colors) && state.colors.length) {
+effectStep = 0;
+ledCanvas.style.background = state.colors[0];
+effectTimer = setInterval(() => {
+effectStep = (effectStep + 1) % state.colors.length;
+ledCanvas.style.background = state.colors[effectStep];
+}, state.interval || 1600);
+} else if (state.mode === "wave_fb" || state.mode === "wave_bf") {
+const order = state.mode === "wave_fb"
+? ["diamond_balcony", "golden", "silver"]
+: ["silver", "golden", "diamond_balcony"];
+const activeUserZone = selectedZone || "diamond_balcony";
+let tick = 0;
+const renderWave = () => {
+const activeZone = order[tick % order.length];
+ledCanvas.style.background = activeZone === activeUserZone ? "#ffffff" : "#09090b";
+tick += 1;
+};
+renderWave();
+effectTimer = setInterval(renderWave, 650);
+} else if (state.mode === "blackout") {
+ledCanvas.style.background = "#060608";
+} else if (state.mode === "custom" && state.color) {
+ledCanvas.style.background = state.color;
+}
+if (broadcast) {
+dispatchNetworkPacket({ type: "scene", payload: state });
+}
+}
+btnCountdownMode.addEventListener("click", () => {
+applyScene({
+key: "",
+kicker: "21 TEMMUZ 2027 • 21:30",
+name: formatConcertCountdown(),
+sub: "Ataköy Marina Açık Hava Sahnesi",
+mode: "countdown"
+});
+});
+btnScatterStart.addEventListener("click", () => {
+const cA = scatterColorA.value;
+const cB = scatterColorB.value;
+applyScene({
+key: "",
+kicker: "KARIŞIK DAĞILIM",
+name: "Tribün Konfeti",
+sub: ⁠${cA.toUpperCase()} & ${cB.toUpperCase()} Karışık⁠,
+mode: "scatter",
+colorA: cA,
+colorB: cB
+});
+});
+btnWaveFB.addEventListener("click", () => {
+applyScene({
+key: "",
+kicker: "MARINA WAVE",
+name: "Dalga • Sahne → Arka",
+sub: "Diamond / Balcony → Golden → Silver",
+mode: "wave_fb"
+});
+});
+btnWaveBF.addEventListener("click", () => {
+applyScene({
+key: "",
+kicker: "MARINA WAVE",
+name: "Dalga • Arka → Sahne",
+sub: "Silver → Golden → Diamond / Balcony",
+mode: "wave_bf"
+});
+});
+function setTorchState(active, broadcast = true) {
+torchActive = active;
+torchBanner.classList.toggle("visible", torchActive);
+btnTorchToggle.textContent = torchActive ? "Fener Uyarısı: Açık" : "Fener Uyarısı: Kapalı";
+btnTorchToggle.classList.toggle("active", torchActive);
+if (broadcast) {
+dispatchNetworkPacket({ type: "torch", payload: torchActive });
+}
+}
+btnTorchToggle.addEventListener("click", () => setTorchState(!torchActive));
+btnBlackout.addEventListener("click", () => {
+applyScene({
+key: "",
+kicker: "OPERATOR",
+name: "Karartma",
+sub: "Siyah Ekran",
+mode: "blackout"
+});
+});
+btnCustomColor.addEventListener("click", () => {
+const hex = colorPicker.value;
+applyScene({
+key: "",
+kicker: "OPERATOR",
+name: "Özel Sahne",
+sub: hex.toUpperCase(),
+mode: "custom",
+color: hex
+});
+});
+function setTicker(text, broadcast = true) {
+const clean = (text || "").trim();
+if (!clean) {
+tickerText.textContent = "";
+tickerBox.classList.remove("visible");
+} else {
+tickerText.textContent = clean;
+tickerBox.classList.add("visible");
+}
+if (broadcast) {
+dispatchNetworkPacket({ type: "ticker", payload: clean });
+}
+}
+btnAnnounce.addEventListener("click", () => {
+setTicker(announceInput.value);
+announceInput.value = "";
+});
+announceInput.addEventListener("keydown", (e) => {
+if (e.key === "Enter") {
+setTicker(announceInput.value);
+announceInput.value = "";
+}
+});
+btnClearAnnounce.addEventListener("click", () => setTicker(""));
+function setChatFrozenState(frozen, broadcast = true) {
+chatFrozen = Boolean(frozen);
+btnChatFreeze.textContent = chatFrozen ? "Sohbet: Kilitli" : "Sohbeti Kilitle: Açık";
+btnChatFreeze.classList.toggle("active", chatFrozen);
+syncChatLockAndNickUI();
+if (broadcast) {
+dispatchNetworkPacket({ type: "chat_freeze", payload: chatFrozen });
+}
+}
+btnChatFreeze.addEventListener("click", () => setChatFrozenState(!chatFrozen));
+function syncChatLockAndNickUI() {
+const hasNick = currentNick.length >= 2;
+const now = Date.now();
+const timeoutLeft = !isOperator ? Math.max(0, chatTimeoutUntil - now) : 0;
+if (hasNick) {
+nickGateBox.style.display = "none";
+nickBadgeRow.classList.add("visible");
+nickPreviewBadge.style.display = isOperator ? "inline-flex" : "none";
+activeNickLabel.textContent = currentNick;
+activeNickLabel.style.color = isOperator ? "#fca5a5" : "";
+if (chatFrozen && !isOperator) {
+chatStatusNotice.classList.add("visible");
+chatStatusNotice.textContent = "Sohbet operatör tarafından kilitlendi";
+chatInput.disabled = true;
+sendChatBtn.disabled = true;
+chatInput.placeholder = "Sohbet şu an kapalı...";
+} else if (timeoutLeft > 0) {
+const sec = Math.ceil(timeoutLeft / 1000);
+chatStatusNotice.classList.add("visible");
+chatStatusNotice.textContent = ⁠Çok hızlı yazdın • ${sec} sn timeout⁠;
+chatInput.disabled = true;
+sendChatBtn.disabled = true;
+chatInput.placeholder = ⁠Bekle (${sec} sn)...⁠;
+} else {
+chatStatusNotice.classList.remove("visible");
+chatInput.disabled = false;
+sendChatBtn.disabled = false;
+chatInput.placeholder = isOperator
+? ⁠${currentNick} (Admin) olarak yaz...⁠
+: ⁠${currentNick} olarak mesaj yaz...⁠;
+}
+} else {
+nickGateBox.style.display = "flex";
+nickBadgeRow.classList.remove("visible");
+if (chatFrozen && !isOperator) {
+chatStatusNotice.classList.add("visible");
+chatStatusNotice.textContent = "Sohbet operatör tarafından kilitlendi";
+} else {
+chatStatusNotice.classList.remove("visible");
+}
+chatInput.disabled = true;
+sendChatBtn.disabled = true;
+chatInput.placeholder = "Önce kullanıcı adını gir...";
+}
+}
+function confirmNick() {
+const val = nickInput.value.trim();
+if (val.length < 2) {
+nickInput.focus();
+return;
+}
+currentNick = val;
+localStorage.setItem("nbhd_nick_v14", currentNick);
+syncChatLockAndNickUI();
+if (!chatInput.disabled) chatInput.focus();
+}
+saveNickBtn.addEventListener("click", confirmNick);
+nickInput.addEventListener("keydown", (e) => {
+if (e.key === "Enter") confirmNick();
+});
+editNickBtn.addEventListener("click", () => {
+nickInput.value = currentNick;
+currentNick = "";
+localStorage.removeItem("nbhd_nick_v14");
+syncChatLockAndNickUI();
+nickInput.focus();
+});
+function toggleChat(open) {
+chatOpen = open;
+chatSheet.classList.toggle("open", chatOpen);
+if (chatOpen) {
+unreadDot.classList.remove("visible");
+pullGlobalChatHistory(false);
+chatFeed.scrollTop = chatFeed.scrollHeight;
+if (currentNick.length < 2) {
+nickInput.focus();
+} else if (!chatInput.disabled) {
+chatInput.focus();
+}
+}
+}
+chatToggleBtn.addEventListener("click", () => toggleChat(!chatOpen));
+chatCloseBtn.addEventListener("click", () => toggleChat(false));
+function deleteChatMessage(msgId, broadcast = true) {
+if (!msgId) return;
+savedChatMessages = savedChatMessages.filter((m) => m.id !== msgId);
+renderAllMessagesFromState();
+cloudDeleteMessage(msgId);
+if (broadcast) {
+dispatchNetworkPacket({ type: "chat_delete", id: msgId });
+}
+}
+function pushMessage(data, broadcast = true, incoming = false, saveToStorage = true) {
+const msgRecord = normalizeMessageRecord(data);
+if (!msgRecord) return;
+const idx = savedChatMessages.findIndex((m) => m.id === msgRecord.id);
+if (idx === -1) {
+savedChatMessages.push(msgRecord);
+} else {
+savedChatMessages[idx] = msgRecord;
+}
+renderAllMessagesFromState();
+if (saveToStorage) {
+cloudSaveMessage(msgRecord);
+}
+if (incoming && !chatOpen) {
+unreadDot.classList.add("visible");
+}
+if (broadcast) {
+dispatchNetworkPacket({
+type: "chat",
+payload: msgRecord
+});
+}
+}
+function restoreChatHistory() {
+renderAllMessagesFromState();
+}
+function triggerChatTimeout() {
+chatTimeoutUntil = Date.now() + CHAT_TIMEOUT_MS;
+localStorage.setItem("nbhd_chat_timeout_v14", String(chatTimeoutUntil));
+recentMsgTimestamps = [];
+syncChatLockAndNickUI();
+}
+function handleSendChat() {
+if (currentNick.length < 2) {
+syncChatLockAndNickUI();
+nickInput.focus();
+return;
+}
+if (chatFrozen && !isOperator) {
+syncChatLockAndNickUI();
+return;
+}
+const now = Date.now();
+if (!isOperator && now < chatTimeoutUntil) {
+syncChatLockAndNickUI();
+return;
+}
+const text = chatInput.value.trim();
+if (!text) return;
+if (!isOperator) {
+recentMsgTimestamps = recentMsgTimestamps.filter((ts) => now - ts < 4000);
+const isDuplicateFlood =
+text.toLowerCase() === lastSentMessage.toLowerCase() &&
+recentMsgTimestamps.length >= 1;
+if (recentMsgTimestamps.length >= 2 || isDuplicateFlood) {
+chatInput.value = "";
+triggerChatTimeout();
+return;
+}
+recentMsgTimestamps.push(now);
+lastSentMessage = text;
+}
+const d = new Date();
+const time = ⁠${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}⁠;
+pushMessage({
+id: "m_" + now + "_" + Math.random().toString(36).slice(2, 7),
+author: currentNick,
+text,
+time,
+ts: now,
+isAdmin: isOperator
+}, true, false, true);
+chatInput.value = "";
+}
+sendChatBtn.addEventListener("click", handleSendChat);
+chatInput.addEventListener("keydown", (e) => {
+if (e.key === "Enter") handleSendChat();
+});
+function updatePeerCount() {
+const now = Date.now();
+peers.set(tabId, now);
+for (const [id, ts] of peers.entries()) {
+if (now - ts > 8000) peers.delete(id);
+}
+updateNetworkUI();
+}
+setInterval(() => {
+updateZoneUI();
+syncChatLockAndNickUI();
+updateNetworkUI();
+}, 1000);
+setInterval(() => {
+updatePeerCount();
+if (channel && navigator.onLine) {
+channel.postMessage({ type: "ping", id: tabId });
+}
+if (hasGlobalCloud && navigator.onLine) {
+pullGlobalChatHistory(true);
+syncGlobalPresence();
+}
+}, 4500);
+if (channel) {
+channel.postMessage({ type: "ping", id: tabId });
+channel.onmessage = (e) => {
+const msg = e.data;
+if (!msg || !msg.type) return;
+if (msg.type === "ping" && msg.id) {
+peers.set(msg.id, Date.now());
+updatePeerCount();
+}
+if (msg.type === "scene") applyScene(msg.payload, false);
+if (msg.type === "ticker") setTicker(msg.payload, false);
+if (msg.type === "torch") setTorchState(msg.payload, false);
+if (msg.type === "chat") pushMessage(msg.payload, false, true, false);
+if (msg.type === "chat_delete") deleteChatMessage(msg.id, false);
+if (msg.type === "chat_freeze") setChatFrozenState(msg.payload, false);
+};
+}
+restoreChatHistory();
+pullGlobalChatHistory(false);
+syncGlobalPresence();
+updateZoneUI();
+syncChatLockAndNickUI();
+let restoredScene = null;
+try {
+restoredScene = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE) || "null");
+} catch (e) {}
+if (restoredScene && restoredScene.mode) {
+applyScene(restoredScene, false);
+} else {
+applyScene({
+key: "",
+kicker: "21 TEMMUZ 2027 • 21:30",
+name: formatConcertCountdown(),
+sub: "Ataköy Marina Açık Hava Sahnesi",
+mode: "countdown"
+}, false);
+}
+</script>
 </body>
 </html>
