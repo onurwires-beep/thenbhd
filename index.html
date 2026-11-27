@@ -6,7 +6,7 @@
 <title>THE NBHD • ATAKÖY MARINA 2027</title>
 <style>
 :root {
---moon-bg: url('./bg.jpg') center/cover no-repeat, radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28) 0%, rgba(147,197,253,0.12) 28%, transparent 55%), linear-gradient(180deg, #3c74b8 0%, #4d85c9 48%, #6399d8 100%);
+--moon-bg: url('./bg.jpg'), url('https://raw.githubusercontent.com/onurwires-beep/thenbhd/main/bg.jpg'), radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28) 0%, rgba(147,197,253,0.12) 28%, transparent 55%), linear-gradient(180deg, #3c74b8 0%, #4d85c9 48%, #6399d8 100%);
 --led: var(--moon-bg);
 --ink: #f5f5f7;
 --muted: rgba(245, 245, 247, 0.68);
@@ -33,8 +33,9 @@ overscroll-behavior-y: none;
 position: fixed;
 inset: 0;
 background: var(--led);
-background-size: cover;
-background-position: center;
+background-size: cover !important;
+background-position: center !important;
+background-repeat: no-repeat !important;
 z-index: 0;
 transition: background 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
 pointer-events: none;
@@ -59,7 +60,7 @@ z-index: 2;
 min-height: 100vh;
 max-width: 480px;
 margin: 0 auto;
-padding: 16px 16px 88px;
+padding: 44px 16px 88px;
 display: flex;
 flex-direction: column;
 justify-content: space-between;
@@ -216,7 +217,9 @@ margin-top: 3px;
 }
 .center-stage {
 text-align: center;
-padding: 18px 12px;
+padding: 22px 16px;
+border-radius: 24px;
+background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.36) 0%, rgba(0, 0, 0, 0.14) 62%, transparent 100%);
 user-select: none;
 }
 .stage-kicker {
@@ -247,6 +250,7 @@ text-shadow: 0 2px 14px rgba(10, 22, 48, 0.72);
 display: flex;
 flex-direction: column;
 gap: 12px;
+margin-bottom: 52px;
 }
 .console {
 background: var(--glass);
@@ -1186,7 +1190,7 @@ Sohbet adı:
 const FIREBASE_DB_URL = "https://leds-32531-default-rtdb.europe-west1.firebasedatabase.app";
 const FIREBASE_CHAT_NODE = "nbhd_marina_2027_global_chat";
 const FIREBASE_PRESENCE_NODE = "nbhd_marina_2027_presence";
-const MOON_BG_CSS = "url('./bg.jpg') center/cover no-repeat, radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28) 0%, rgba(147,197,253,0.12) 28%, transparent 55%), linear-gradient(180deg, #3c74b8 0%, #4d85c9 48%, #6399d8 100%)";
+const MOON_BG_CSS = "url('./bg.jpg'), url('https://raw.githubusercontent.com/onurwires-beep/thenbhd/main/bg.jpg'), radial-gradient(circle at 50% 24%, rgba(255,255,255,0.28) 0%, rgba(147,197,253,0.12) 28%, transparent 55%), linear-gradient(180deg, #3c74b8 0%, #4d85c9 48%, #6399d8 100%)";
 const OPERATOR_PIN = "1305";
 const CONCERT_TARGET_TS = new Date("2027-07-21T21:30:00+03:00").getTime();
 const ZONE_COOLDOWN_MS = 10 * 60 * 1000;
