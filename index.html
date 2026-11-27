@@ -312,7 +312,6 @@
       align-items: center;
     }
 
-    /* Seyirci Mekan Planı */
     .venue-map {
       display: flex;
       flex-direction: column;
@@ -390,7 +389,6 @@
       color: var(--muted);
     }
 
-    /* OP Panel Yan Sekme Geçişleri */
     .op-tabs {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -441,7 +439,6 @@
       gap: 13px;
     }
 
-    /* İnteraktif Parmakla Kontrol Edilen Ataköy Marina Haritası */
     .tactile-arena-wrap {
       display: flex;
       flex-direction: column;
@@ -565,7 +562,6 @@
       display: flex;
     }
 
-    /* Yatay Kaydırmalı 20 Şarkı Setlist Şeridi */
     .scene-scroller {
       display: flex;
       gap: 8px;
@@ -897,6 +893,25 @@
       font-weight: 700;
     }
 
+    .chat-scope-tag {
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: 999px;
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      color: #86efac;
+      margin-left: 6px;
+    }
+
+    .chat-scope-tag.local-only {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.35);
+      color: #fcd34d;
+    }
+
     .nick-gate {
       padding: 10px;
       border-radius: 12px;
@@ -1120,7 +1135,10 @@
   <!-- Sağ Köşe Açılır Chat -->
   <aside class="chat-sheet" id="chatSheet">
     <div class="chat-head">
-      <span class="chat-head-title">Chat</span>
+      <div style="display:flex;align-items:center;">
+        <span class="chat-head-title">Alan Sohbeti</span>
+        <span class="chat-scope-tag local-only" id="chatScopeTag">CİHAZ YEREL</span>
+      </div>
       <button type="button" class="ghost-btn" id="chatCloseBtn" style="padding: 4px 9px; font-size: 11px;">Kapat</button>
     </div>
 
@@ -1178,7 +1196,6 @@
         </div>
       </header>
 
-      <!-- Parlaklığı Sona Getirme Uyarısı -->
       <div class="brightness-tip" id="brightnessTip">
         <span>Maksimum etki için <strong>telefon parlaklığını sona getirmeyi</strong> unutma.</span>
         <button type="button" class="tip-close" id="closeBrightnessTip" aria-label="Kapat">×</button>
@@ -1202,7 +1219,6 @@
     </section>
 
     <div class="stack-bottom">
-      <!-- Seyirci Konsolu -->
       <section class="console">
         <div>
           <div class="block-label">
@@ -1227,28 +1243,23 @@
         </div>
       </section>
 
-      <!-- Operatör Konsolu (PIN: 1305) — İki Yan Sekmeli: 1) Genel Kontrol, 2) Parmakla Alan Haritası -->
       <section class="console operator-only" id="operatorConsole">
         <div class="block-label" style="margin-bottom: 0;">
           <span>Operatör Kontrol Paneli</span>
           <button type="button" class="ghost-btn" id="lockOpBtn" style="padding: 3px 8px; font-size: 10px;">Menüyü Kapat</button>
         </div>
 
-        <!-- Auto Offline / Kuyruk Durum Çubuğu -->
         <div class="queue-banner" id="queueBanner">
           <span id="queueBannerText">Auto Offline aktif • Kuyrukta: 0 komut</span>
           <button type="button" class="ghost-btn" id="btnFlushQueue" style="padding: 3px 8px; font-size: 10px; color: #fcd34d; border-color: rgba(245,158,11,0.45);">Şimdi Gönder</button>
         </div>
 
-        <!-- OP Yan Sekme Seçici -->
         <div class="op-tabs">
           <button type="button" class="op-tab-btn active" id="tabBtnControls">Genel Kontrol</button>
           <button type="button" class="op-tab-btn" id="tabBtnMap">Alan Haritası (Dokunmatik)</button>
         </div>
 
-        <!-- Yatay Kaydırılabilir 2 Yan Panel -->
         <div class="op-pages-track" id="opPagesTrack">
-          <!-- YAN PANEL 1: Setlist, Karışık Dağılım, Modlar ve Duyuru -->
           <div class="op-page" id="opPageControls">
             <div>
               <div class="block-label">
@@ -1293,7 +1304,6 @@
             </div>
           </div>
 
-          <!-- YAN PANEL 2: Parmakla Kontrol Edilen Ataköy Marina Mekan Haritası -->
           <div class="op-page" id="opPageMap">
             <div>
               <div class="block-label">
@@ -1307,7 +1317,6 @@
                 <button type="button" class="ghost-btn" id="btnMapClearAll" style="padding: 8px 10px;">Temizle</button>
               </div>
 
-              <!-- Biletix Planıyla Birebir Yerleşim -->
               <div class="tactile-arena-wrap" id="tactileArena">
                 <div class="tactile-stage">STAGE</div>
                 <div class="tactile-plan-body">
@@ -1332,14 +1341,23 @@
   </main>
 
   <script>
+    // =========================================================
+    // GLOBAL VERİTABANI AYARI (FIREBASE REALTIME DATABASE URL)
+    // Farklı cihazların ortak global chat geçmişini görmesi için
+    // Firebase Realtime Database URL'ini buraya yaz:
+    // Örnek: "https://senin-proje-default-rtdb.europe-west1.firebasedatabase.app"
+    // =========================================================
+    const FIREBASE_DB_URL = "https://leds-32531-default-rtdb.europe-west1.firebasedatabase.app/";
+    const FIREBASE_CHAT_NODE = "nbhd_marina_2027_global_chat";
+
     const OPERATOR_PIN = "1305";
     const CONCERT_TARGET_TS = new Date("2027-07-21T21:30:00+03:00").getTime();
     const ZONE_COOLDOWN_MS = 10 * 60 * 1000;
     const CHAT_TIMEOUT_MS = 10 * 1000;
-    const STORAGE_KEY_STATE = "nbhd_marina_cached_state_v13";
-    const STORAGE_KEY_QUEUE = "nbhd_marina_offline_queue_v13";
-    const STORAGE_KEY_CHAT = "nbhd_marina_chat_history_v13";
-    const MAX_STORED_MESSAGES = 100;
+    const STORAGE_KEY_STATE = "nbhd_marina_cached_state_v14";
+    const STORAGE_KEY_QUEUE = "nbhd_marina_offline_queue_v14";
+    const STORAGE_KEY_CHAT = "nbhd_marina_chat_history_v14";
+    const MAX_STORED_MESSAGES = 200;
     const tabId = "tab_" + Math.random().toString(36).slice(2, 10);
 
     const ZONE_LABELS = {
@@ -1450,6 +1468,7 @@
     const chatToggleBtn = document.getElementById("chatToggleBtn");
     const chatCloseBtn = document.getElementById("chatCloseBtn");
     const chatSheet = document.getElementById("chatSheet");
+    const chatScopeTag = document.getElementById("chatScopeTag");
     const unreadDot = document.getElementById("unreadDot");
 
     const nickGateBox = document.getElementById("nickGateBox");
@@ -1483,12 +1502,12 @@
     };
     let mapHoldMode = false;
 
-    let selectedZone = localStorage.getItem("nbhd_marina_zone_v13") || "";
-    let zoneLockUntil = Number(localStorage.getItem("nbhd_marina_zone_lock_v13") || "0");
+    let selectedZone = localStorage.getItem("nbhd_marina_zone_v14") || "";
+    let zoneLockUntil = Number(localStorage.getItem("nbhd_marina_zone_lock_v14") || "0");
     let pendingZoneChoice = "";
 
-    let currentNick = (localStorage.getItem("nbhd_nick_v13") || "").trim();
-    let chatTimeoutUntil = Number(localStorage.getItem("nbhd_chat_timeout_v13") || "0");
+    let currentNick = (localStorage.getItem("nbhd_nick_v14") || "").trim();
+    let chatTimeoutUntil = Number(localStorage.getItem("nbhd_chat_timeout_v14") || "0");
     let recentMsgTimestamps = [];
     let lastSentMessage = "";
 
@@ -1497,8 +1516,23 @@
     peers.set(tabId, Date.now());
 
     const channel = ("BroadcastChannel" in window)
-      ? new BroadcastChannel("nbhd_marina_2027_v13")
+      ? new BroadcastChannel("nbhd_marina_2027_v14")
       : null;
+
+    const cleanDbBase = FIREBASE_DB_URL.trim().replace(/\/+$/, "");
+    const hasGlobalCloud = cleanDbBase.startsWith("https://");
+
+    function updateChatScopeTag() {
+      if (!chatScopeTag) return;
+      if (hasGlobalCloud) {
+        chatScopeTag.textContent = "GLOBAL CANLI";
+        chatScopeTag.classList.remove("local-only");
+      } else {
+        chatScopeTag.textContent = "CİHAZ YEREL";
+        chatScopeTag.classList.add("local-only");
+      }
+    }
+    updateChatScopeTag();
 
     function createAdminShieldSvg() {
       const ns = "http://www.w3.org/2000/svg";
@@ -1564,9 +1598,6 @@
       return svg;
     }
 
-    // =========================================================
-    // 0. KALICI SOHBET GEÇMİŞİ (LOCALSTORAGE)
-    // =========================================================
     let savedChatMessages = [];
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY_CHAT) || "[]");
@@ -1581,9 +1612,59 @@
       } catch (e) {}
     }
 
-    // =========================================================
-    // 1. AUTO OFFLINE, KUYRUK & CANLI KİŞİ SAYACI
-    // =========================================================
+    async function cloudSaveMessage(msgRecord) {
+      if (!hasGlobalCloud || !navigator.onLine) return;
+      try {
+        await fetch(`${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(msgRecord.id)}.json`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(msgRecord)
+        });
+      } catch (e) {}
+    }
+
+    async function cloudDeleteMessage(msgId) {
+      if (!hasGlobalCloud || !navigator.onLine || !msgId) return;
+      try {
+        await fetch(`${cleanDbBase}/${FIREBASE_CHAT_NODE}/${encodeURIComponent(msgId)}.json`, {
+          method: "DELETE"
+        });
+      } catch (e) {}
+    }
+
+    async function pullGlobalChatHistory() {
+      if (!hasGlobalCloud || !navigator.onLine) return;
+      try {
+        const res = await fetch(`${cleanDbBase}/${FIREBASE_CHAT_NODE}.json`);
+        if (!res.ok) return;
+        const raw = await res.json();
+        if (!raw || typeof raw !== "object") return;
+
+        const list = Object.values(raw)
+          .filter((item) => item && item.id && item.author && item.text)
+          .sort((a, b) => (a.ts || 0) - (b.ts || 0))
+          .slice(-MAX_STORED_MESSAGES);
+
+        const existingIds = new Set(savedChatMessages.map((m) => m.id));
+        let addedAny = false;
+
+        list.forEach((msg) => {
+          if (!existingIds.has(msg.id)) {
+            savedChatMessages.push(msg);
+            existingIds.add(msg.id);
+            addedAny = true;
+          }
+          pushMessage(msg, false, false, false);
+        });
+
+        if (addedAny) {
+          savedChatMessages.sort((a, b) => (a.ts || 0) - (b.ts || 0));
+          savedChatMessages = savedChatMessages.slice(-MAX_STORED_MESSAGES);
+          persistChatHistory();
+        }
+      } catch (e) {}
+    }
+
     let isOnline = navigator.onLine;
     let offlineQueue = [];
     try {
@@ -1655,6 +1736,11 @@
       saveOfflineQueue();
 
       pending.forEach((pkt) => {
+        if (pkt.type === "chat" && pkt.payload) {
+          cloudSaveMessage(pkt.payload);
+        } else if (pkt.type === "chat_delete" && pkt.id) {
+          cloudDeleteMessage(pkt.id);
+        }
         if (channel) {
           try {
             channel.postMessage(pkt);
@@ -1669,6 +1755,7 @@
     window.addEventListener("online", () => {
       updateNetworkUI();
       flushOfflineQueue();
+      pullGlobalChatHistory();
     });
 
     window.addEventListener("offline", () => {
@@ -1678,9 +1765,6 @@
     btnFlushQueue.addEventListener("click", flushOfflineQueue);
     updateNetworkUI();
 
-    // =========================================================
-    // 2. OP PANEL YAN SEKME (GENEL KONTROL <-> ALAN HARİTASI)
-    // =========================================================
     function switchOpTab(tabIndex) {
       const targetX = tabIndex === 1 ? opPagesTrack.clientWidth : 0;
       opPagesTrack.scrollTo({ left: targetX, behavior: "smooth" });
@@ -1698,9 +1782,6 @@
       tabBtnMap.classList.toggle("active", idx === 1);
     });
 
-    // =========================================================
-    // 3. PARMAKLA KONTROL EDİLEN ATAKÖY MARİNA MEKAN HARİTASI
-    // =========================================================
     btnMapTouchMode.addEventListener("click", () => {
       mapHoldMode = !mapHoldMode;
       btnMapTouchMode.textContent = mapHoldMode
@@ -1801,11 +1882,9 @@
         dispatchNetworkPacket({ type: "scene", payload: currentSceneState });
       }
       flushOfflineQueue();
+      pullGlobalChatHistory();
     });
 
-    // =========================================================
-    // 4. GENEL KONTROLLER, KİLİT & SAHNE MOTORU
-    // =========================================================
     closeBrightnessTip.addEventListener("click", () => {
       brightnessTip.classList.add("hidden");
     });
@@ -1982,8 +2061,8 @@
       if (!pendingZoneChoice || !ZONE_LABELS[pendingZoneChoice]) return;
       selectedZone = pendingZoneChoice;
       zoneLockUntil = Date.now() + ZONE_COOLDOWN_MS;
-      localStorage.setItem("nbhd_marina_zone_v13", selectedZone);
-      localStorage.setItem("nbhd_marina_zone_lock_v13", String(zoneLockUntil));
+      localStorage.setItem("nbhd_marina_zone_v14", selectedZone);
+      localStorage.setItem("nbhd_marina_zone_lock_v14", String(zoneLockUntil));
       closeZoneModal();
       updateZoneUI();
       if (currentSceneState) applyScene(currentSceneState, false);
@@ -1992,7 +2071,7 @@
     unlockZoneBtn.addEventListener("click", () => {
       if (Date.now() < zoneLockUntil) return;
       selectedZone = "";
-      localStorage.removeItem("nbhd_marina_zone_v13");
+      localStorage.removeItem("nbhd_marina_zone_v14");
       updateZoneUI();
     });
 
@@ -2307,7 +2386,7 @@
         return;
       }
       currentNick = val;
-      localStorage.setItem("nbhd_nick_v13", currentNick);
+      localStorage.setItem("nbhd_nick_v14", currentNick);
       syncChatLockAndNickUI();
       if (!chatInput.disabled) chatInput.focus();
     }
@@ -2320,7 +2399,7 @@
     editNickBtn.addEventListener("click", () => {
       nickInput.value = currentNick;
       currentNick = "";
-      localStorage.removeItem("nbhd_nick_v13");
+      localStorage.removeItem("nbhd_nick_v14");
       syncChatLockAndNickUI();
       nickInput.focus();
     });
@@ -2330,6 +2409,7 @@
       chatSheet.classList.toggle("open", chatOpen);
       if (chatOpen) {
         unreadDot.classList.remove("visible");
+        pullGlobalChatHistory();
         chatFeed.scrollTop = chatFeed.scrollHeight;
         if (currentNick.length < 2) {
           nickInput.focus();
@@ -2349,6 +2429,7 @@
 
       savedChatMessages = savedChatMessages.filter((m) => m.id !== msgId);
       persistChatHistory();
+      cloudDeleteMessage(msgId);
 
       if (chatFeed.querySelectorAll(".msg-item").length === 0 && chatEmpty) {
         chatEmpty.style.display = "block";
@@ -2370,6 +2451,7 @@
         author: data.author,
         text: data.text,
         time: data.time || "",
+        ts: data.ts || Date.now(),
         isAdmin: Boolean(data.isAdmin)
       };
 
@@ -2401,7 +2483,7 @@
       const delBtn = document.createElement("button");
       delBtn.type = "button";
       delBtn.className = "msg-del-btn";
-      delBtn.title = "Mesajı tüm ekranlardan sil";
+      delBtn.title = "Mesajı sil";
       delBtn.textContent = "×";
       delBtn.addEventListener("click", () => {
         if (!isOperator) return;
@@ -2427,6 +2509,7 @@
           savedChatMessages.push(msgRecord);
           persistChatHistory();
         }
+        cloudSaveMessage(msgRecord);
       }
 
       if (incoming && !chatOpen) {
@@ -2450,7 +2533,7 @@
 
     function triggerChatTimeout() {
       chatTimeoutUntil = Date.now() + CHAT_TIMEOUT_MS;
-      localStorage.setItem("nbhd_chat_timeout_v13", String(chatTimeoutUntil));
+      localStorage.setItem("nbhd_chat_timeout_v14", String(chatTimeoutUntil));
       recentMsgTimestamps = [];
       syncChatLockAndNickUI();
     }
@@ -2494,10 +2577,11 @@
       const d = new Date();
       const time = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
       pushMessage({
-        id: "m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+        id: "m_" + now + "_" + Math.random().toString(36).slice(2, 7),
         author: currentNick,
         text,
         time,
+        ts: now,
         isAdmin: isOperator
       }, true, false, true);
       chatInput.value = "";
@@ -2528,6 +2612,9 @@
       if (channel && navigator.onLine) {
         channel.postMessage({ type: "ping", id: tabId });
       }
+      if (hasGlobalCloud && navigator.onLine) {
+        pullGlobalChatHistory();
+      }
     }, 3000);
 
     if (channel) {
@@ -2542,13 +2629,14 @@
         if (msg.type === "scene") applyScene(msg.payload, false);
         if (msg.type === "ticker") setTicker(msg.payload, false);
         if (msg.type === "torch") setTorchState(msg.payload, false);
-        if (msg.type === "chat") pushMessage(msg.payload, false, true, true);
+        if (msg.type === "chat") pushMessage(msg.payload, false, true, false);
         if (msg.type === "chat_delete") deleteChatMessage(msg.id, false);
         if (msg.type === "chat_freeze") setChatFrozenState(msg.payload, false);
       };
     }
 
     restoreChatHistory();
+    pullGlobalChatHistory();
     updateZoneUI();
     syncChatLockAndNickUI();
 
@@ -2571,3 +2659,4 @@
   </script>
 </body>
 </html>
+
