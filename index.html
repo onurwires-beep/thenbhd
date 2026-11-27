@@ -1296,6 +1296,8 @@
     const CHAT_TIMEOUT_MS = 10 * 1000;
     const STORAGE_KEY_STATE = "nbhd_marina_cached_state_v13";
     const STORAGE_KEY_QUEUE = "nbhd_marina_offline_queue_v13";
+    const STORAGE_KEY_CHAT = "nbhd_marina_chat_history_v13";
+    const MAX_STORED_MESSAGES = 100;
     const tabId = "tab_" + Math.random().toString(36).slice(2, 10);
 
     const ZONE_LABELS = {
@@ -1454,6 +1456,23 @@
     const channel = ("BroadcastChannel" in window)
       ? new BroadcastChannel("nbhd_marina_2027_v13")
       : null;
+
+    // =========================================================
+    // 0. KALICI SOHBET GEÇMİŞİ (LOCALSTORAGE)
+    // =========================================================
+    let savedChatMessages = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY_CHAT) || "[]");
+      if (Array.isArray(parsed)) savedChatMessages = parsed;
+    } catch (e) {
+      savedChatMessages = [];
+    }
+
+    function persistChatHistory() {
+      try {
+        localStorage.setItem(STORAGE_KEY_CHAT, JSON.stringify(savedChatMessages.slice(-MAX_STORED_MESSAGES)));
+      } catch (e) {}
+    }
 
     // =========================================================
     // 1. AUTO OFFLINE, KUYRUK & CANLI KİŞİ SAYACI
@@ -2216,6 +2235,10 @@
       if (!msgId) return;
       const el = chatFeed.querySelector(`[data-msg-id="${msgId}"]`);
       if (el) el.remove();
+
+      savedChatMessages = savedChatMessages.filter((m) => m.id !== msgId);
+      persistChatHistory();
+
       if (chatFeed.querySelectorAll(".msg-item").length === 0 && chatEmpty) {
         chatEmpty.style.display = "block";
       }
@@ -2224,11 +2247,19 @@
       }
     }
 
-    function pushMessage(data, broadcast = true, incoming = false) {
+    function pushMessage(data, broadcast = true, incoming = false, saveToStorage = true) {
       if (!data || !data.text || !data.author) return;
       if (chatEmpty) chatEmpty.style.display = "none";
 
       const msgId = data.id || ("m_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7));
+      if (chatFeed.querySelector(`[data-msg-id="${msgId}"]`)) return;
+
+      const msgRecord = {
+        id: msgId,
+        author: data.author,
+        text: data.text,
+        time: data.time || ""
+      };
 
       const item = document.createElement("div");
       item.className = "msg-item";
@@ -2238,13 +2269,13 @@
       head.className = "msg-head";
 
       const authorSpan = document.createElement("span");
-      authorSpan.textContent = data.author;
+      authorSpan.textContent = msgRecord.author;
 
       const rightWrap = document.createElement("span");
       rightWrap.className = "msg-meta-right";
 
       const timeSpan = document.createElement("span");
-      timeSpan.textContent = data.time || "";
+      timeSpan.textContent = msgRecord.time;
 
       const delBtn = document.createElement("button");
       delBtn.type = "button";
@@ -2263,12 +2294,19 @@
       head.appendChild(rightWrap);
 
       const body = document.createElement("div");
-      body.textContent = data.text;
+      body.textContent = msgRecord.text;
 
       item.appendChild(head);
       item.appendChild(body);
       chatFeed.appendChild(item);
       chatFeed.scrollTop = chatFeed.scrollHeight;
+
+      if (saveToStorage) {
+        if (!savedChatMessages.some((m) => m.id === msgId)) {
+          savedChatMessages.push(msgRecord);
+          persistChatHistory();
+        }
+      }
 
       if (incoming && !chatOpen) {
         unreadDot.classList.add("visible");
@@ -2277,9 +2315,16 @@
       if (broadcast) {
         dispatchNetworkPacket({
           type: "chat",
-          payload: { id: msgId, author: data.author, text: data.text, time: data.time }
+          payload: msgRecord
         });
       }
+    }
+
+    function restoreChatHistory() {
+      if (!savedChatMessages.length) return;
+      savedChatMessages.forEach((msg) => {
+        pushMessage(msg, false, false, false);
+      });
     }
 
     function triggerChatTimeout() {
@@ -2332,7 +2377,7 @@
         author: currentNick,
         text,
         time
-      }, true, false);
+      }, true, false, true);
       chatInput.value = "";
     }
 
@@ -2375,12 +2420,13 @@
         if (msg.type === "scene") applyScene(msg.payload, false);
         if (msg.type === "ticker") setTicker(msg.payload, false);
         if (msg.type === "torch") setTorchState(msg.payload, false);
-        if (msg.type === "chat") pushMessage(msg.payload, false, true);
+        if (msg.type === "chat") pushMessage(msg.payload, false, true, true);
         if (msg.type === "chat_delete") deleteChatMessage(msg.id, false);
         if (msg.type === "chat_freeze") setChatFrozenState(msg.payload, false);
       };
     }
 
+    restoreChatHistory();
     updateZoneUI();
     syncChatLockAndNickUI();
 
