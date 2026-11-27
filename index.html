@@ -1131,7 +1131,7 @@
   <aside class="chat-sheet" id="chatSheet">
     <div class="chat-head">
       <div style="display:flex;align-items:center;">
-        <span class="chat-head-title">Alan Sohbeti</span>
+        <span class="chat-head-title">Chat</span>
         <span class="chat-scope-tag local-only" id="chatScopeTag">CİHAZ YEREL</span>
       </div>
       <button type="button" class="ghost-btn" id="chatCloseBtn" style="padding: 4px 9px; font-size: 11px;">Kapat</button>
@@ -1516,7 +1516,7 @@
     function updateChatScopeTag() {
       if (!chatScopeTag) return;
       if (hasGlobalCloud) {
-        chatScopeTag.textContent = "GLOBAL CANLI";
+        chatScopeTag.textContent = "LIVE";
         chatScopeTag.classList.remove("local-only");
       } else {
         chatScopeTag.textContent = "CİHAZ YEREL";
